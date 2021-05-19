@@ -1,0 +1,14 @@
+# Specific Files
+
+# Folders
+experiments/
+venv/
+
+# File Types
+*.pv
+*.npz
+*.mp4
+*.mkv
+*.avi
+*.jpg
+*.bmp

@@ -1,0 +1,6 @@
+averaging_method = min
+blob_size_range = [0.15,0.7]
+equalize_histogram = false
+grabber_use_threads = true
+meta_species = "jumping bean moth"
+threshold = 8

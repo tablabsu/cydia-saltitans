@@ -1,0 +1,11 @@
+Aluminum Temp Range:
+(with heating mats set to min and max setting and left for 8-10 minutes)
+
+Pre-Recording Sheet:
+  Min Temp: 22.9 Celsius
+  Max Temp: 23.4 Celsius
+
+Recording Sheet:
+  Min Temp: 23.9 Celsius
+  Max Temp: 27.7 Celsius
+
