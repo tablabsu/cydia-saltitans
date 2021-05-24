@@ -40,6 +40,7 @@ if not os.path.split(args['path'])[-1].endswith(".avi"):
     logging.warning("Given path does not point to a .avi file! Exiting...")
 
 vs = cv2.VideoCapture(args['path'])
+quit = False
 cv2.namedWindow(WINDOW, cv2.WINDOW_NORMAL)
 cv2.resizeWindow(WINDOW, WINDOW_SIZE[0], WINDOW_SIZE[1])
 while True:
@@ -69,12 +70,20 @@ while True:
             cX, cY = 0, 0
         cv2.circle(frame, (cX, cY), 5, (255, 0, 0), -1)
         cv2.putText(frame, "centroid {0}".format(i), (cX - 25, cY - 25), FONT, 1, (255, 0, 0), 2)
-    cv2.putText(frame, "Frame {0} of {1}".format(int(vs.get(cv2.CAP_PROP_POS_FRAMES)), int(vs.get(cv2.CAP_PROP_FRAME_COUNT))), (0, height - 5), FONT, 1, (0, 0, 255), 2)
+    cv2.putText(frame, "Frame {0} of {1}".format(int(vs.get(cv2.CAP_PROP_POS_FRAMES)), int(vs.get(cv2.CAP_PROP_FRAME_COUNT))), (0, height - 10), FONT, 1, (0, 0, 255), 2)
     cv2.imshow(WINDOW, frame)
     key = cv2.waitKey(1) & 0xFF
+    # Pause processing with p
     if key == ord("p"):
-        pass
-    elif key == ord("q"):
+        key = cv2.waitKey(1) & 0xFF
+        # Wait for p to play again
+        while key != ord("p"):
+            # Quit while paused
+            if key == ord("q"):
+                quit = True
+                break
+            key = cv2.waitKey(1) & 0xFF
+    elif key == ord("q") or quit:
         logging.info("Quitting...")
         break
 vs.release()
