@@ -1,4 +1,4 @@
-averaging_method = min
+averaging_method = mode
 blob_size_range = [0.15,0.7]
 equalize_histogram = false
 grabber_use_threads = true

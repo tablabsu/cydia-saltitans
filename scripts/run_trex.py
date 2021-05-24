@@ -27,6 +27,7 @@ if not os.path.exists(args['path']):
     logging.warning("Given path does not point to an existing file! Exiting...")
     sys.exit(1)
 
+# Using absolute paths for arguments because TRex doesn't like relative paths
 input_path = os.path.abspath(args['path'])
 output_path = os.path.abspath(os.path.splitext(args['path'])[0])
 logging.debug("INPUT PATH: {0}".format(input_path))
