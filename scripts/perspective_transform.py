@@ -5,8 +5,9 @@ import sys, os, argparse, logging
 
 IMAGE_ENDINGS = ("jpg", "bmp", "jpeg", "png")
 IMAGE_PREFIX = "Image"
-RESIZE_FACTOR = (11/8.5)
+RESIZE_FACTOR = (8.5/11)
 WINDOW = 'Perspective Transformation - OpenCV'
+WINDOW_SIZE = (1500, 1100)
 FONT = cv2.FONT_HERSHEY_SIMPLEX
 
 # --------- UTILITY METHODS --------- 
@@ -79,7 +80,7 @@ image = cv2.imread(os.path.join(args['path'], im_files[0]))
 coords = []    
 
 cv2.namedWindow(WINDOW, cv2.WINDOW_NORMAL)
-#cv2.resizeWindow(WINDOW, 800, 600)
+cv2.resizeWindow(WINDOW, WINDOW_SIZE[0], WINDOW_SIZE[1])
 cv2.setMouseCallback(WINDOW, click_points, coords)
 while True:
     cv2.imshow(WINDOW, image)
@@ -102,7 +103,9 @@ while True:
                 transform_coords = np.float32(order_points(coords))
                 matrix = cv2.getPerspectiveTransform(transform_coords, image_coords)
                 image = cv2.warpPerspective(image, matrix, (width, height))
-                cv2.putText(image, "Processing image {0} out of {1}".format(i + 1, len(im_files)), (0, height - 10), FONT, 1, (0, 0, 255), 2)
+                image = cv2.resize(image, (width, int(width*RESIZE_FACTOR)))
+                cv2.imwrite(os.path.join(args['path'], "transformed", im), image)
+                cv2.putText(image, "Processing image {0} out of {1}".format(i + 1, len(im_files)), (0, int(width*RESIZE_FACTOR) - 10), FONT, 1, (0, 0, 255), 2)
                 cv2.imshow(WINDOW, image)
                 key = cv2.waitKey(1) & 0xFF
                 if key == ord("q"):
@@ -112,7 +115,8 @@ while True:
                     cv2.putText(image, "Processing stopped.", (0, height - 5), FONT, 1, (0, 0, 255), 2)
                     cv2.imshow(WINDOW, image)
                     break
-                cv2.imwrite(os.path.join(args['path'], "transformed", im), image)
+            image = cv2.imread(os.path.join(args['path'], im_files[0]))
+            cv2.putText(image, "Processing complete.", (0, height - 10), FONT, 1, (0, 0, 255), 2)
     elif key == ord("q"):
         # Quit program on Q key
         logging.info("Quitting...")

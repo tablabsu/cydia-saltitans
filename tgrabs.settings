@@ -4,3 +4,4 @@ equalize_histogram = false
 grabber_use_threads = true
 meta_species = "jumping bean moth"
 threshold = 8
+meta_real_width = 27.94
