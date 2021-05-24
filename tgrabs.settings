@@ -1,7 +1,7 @@
 averaging_method = mode
-blob_size_range = [0.15,0.7]
+blob_size_range = [0.12,0.7]
 equalize_histogram = false
 grabber_use_threads = true
 meta_species = "jumping bean moth"
-threshold = 8
+threshold = 9
 meta_real_width = 27.94

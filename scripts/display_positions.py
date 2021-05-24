@@ -53,12 +53,18 @@ logging.info("Setting up plots...")
 fig, ax = plt.subplots()
 
 # Flattening all x and y values across all frames, then calculating x and y limits
-px = [i for l in [f['x'] for f in frames] for i in l if i != np.inf] 
+'''px = [i for l in [f['x'] for f in frames] for i in l if i != np.inf] 
 py = [i for l in [f['y'] for f in frames] for i in l if i != np.inf]
 logging.debug("PX: {0}, PY: {0}".format(px, py))
 # Setting axis limits as [min(var) - stdev(var), max(var) + stdev(var)]
 ax.set_xlim(min(px) - np.std(px), max(px) + np.std(px))
-ax.set_ylim(min(py) - np.std(py), max(py) + np.std(py))
+ax.set_ylim(min(py) - np.std(py), max(py) + np.std(py))'''
+ax.set_xlim(0, 27.94)
+ax.set_ylim(21.59, 0)
+ax.set_xlabel('X position (cm)')
+ax.set_ylabel('Y position (cm)')
+ax.set_title('Jumping Bean Coordinates')
+ax.xaxis.tick_top()
 
 plot = plt.scatter([], [])
 
