@@ -37,6 +37,8 @@ def centroid_border(c, factor, shape):
         return True
     return False
 
+# -----------------------------------
+
 # Setting up argument parser
 parser = argparse.ArgumentParser(description="Object tracking OpenCV contour detection, centroid calculation, and tracking algorithms")
 parser.add_argument("path", help="Path to video, ending in .avi")
@@ -61,12 +63,12 @@ if not os.path.exists(args['path']):
 if not os.path.split(args['path'])[-1].endswith(".avi"):
     logging.warning("Given path does not point to a .avi file! Exiting...")
 
-kill = 0
-vs = cv2.VideoCapture(args['path'])
 quit = False
+vs = cv2.VideoCapture(args['path'])
 cv2.namedWindow(WINDOW, cv2.WINDOW_NORMAL)
 cv2.resizeWindow(WINDOW, WINDOW_SIZE[0], WINDOW_SIZE[1])
-while True:
+key = cv2.waitKey(1) & 0xFF
+while key != ord("q") and not quit:
     # Read video frames
     ret, frame = vs.read()
     if not ret:
@@ -110,12 +112,6 @@ while True:
     else:
         filtered_centroids = centroids
 
-    if args.get("debug"):
-        logging.debug("FRAME {0} CENTROIDS: {1}".format(int(vs.get(cv2.CAP_PROP_FRAME_COUNT)), centroids))
-        logging.debug("FRAME {0} FILTERED CENTROIDS: {1}".format(int(vs.get(cv2.CAP_PROP_FRAME_COUNT)), filtered_centroids))
-        for (c, _) in centroids:
-            cv2.circle(frame, (c['X'], c['Y']), 5, (0, 255, 255), -1)
-
     # Removing area data for drawing
     centroids = [c for (c, a) in filtered_centroids] 
 
@@ -128,11 +124,12 @@ while True:
     cv2.putText(frame, "Frame {0} of {1}".format(int(vs.get(cv2.CAP_PROP_POS_FRAMES)), int(vs.get(cv2.CAP_PROP_FRAME_COUNT))), (0, height - 10), FONT, 1, (0, 0, 255), 2)
     cv2.imshow(WINDOW, frame)
 
+    # Checking if a key was pressed
     key = cv2.waitKey(1) & 0xFF
-
-    # Pause processing with p
     if key == ord("p"):
+        # Pause on p and wait for key press
         key = cv2.waitKey(1) & 0xFF
+
         # Wait for p to play again
         while key != ord("p"):
             # Quit while paused
@@ -140,8 +137,7 @@ while True:
                 quit = True
                 break
             key = cv2.waitKey(1) & 0xFF
-    elif key == ord("q") or quit:
-        logging.info("Quitting...")
-        break
+            
+logging.info("Quitting...")
 vs.release()
 cv2.destroyAllWindows()
