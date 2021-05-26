@@ -28,6 +28,15 @@ def centroid_avg(cntrds):
     areas = sum([i[1] for i in cntrds])
     return ({'X': round(w_x / areas), 'Y': round(w_y / areas)}, areas)
 
+# Returns true if c is within factor percent of image borders
+def centroid_border(c, factor, shape):
+    height, width, channels = shape
+    if c[0]['X'] <= factor*width or c[0]['X'] >= (1 - factor)*width:
+        return True
+    elif c[0]['Y'] <= factor*height or c[0]['X'] >= (1 - factor)*height:
+        return True
+    return False
+
 # Setting up argument parser
 parser = argparse.ArgumentParser(description="Object tracking OpenCV contour detection, centroid calculation, and tracking algorithms")
 parser.add_argument("path", help="Path to video, ending in .avi")
@@ -86,6 +95,9 @@ while True:
 
     # Removing first centroid, formed by borders of image
     centroids = centroids[1:]
+
+    # Removing centroids within 1% of border of image
+    centroids = [c for c in centroids if not centroid_border(c, 0.01, frame.shape)]
         
     # Pass over centroids, combine those within set radius into their weighted average centroid
     if not args.get("debug_disable_avg"):
@@ -117,10 +129,6 @@ while True:
     cv2.imshow(WINDOW, frame)
 
     key = cv2.waitKey(1) & 0xFF
-
-    if int(vs.get(cv2.CAP_PROP_POS_FRAMES)) == 1:
-        while key != ord("p"):
-            key = cv2.waitKey(1) & 0xFF
 
     # Pause processing with p
     if key == ord("p"):
