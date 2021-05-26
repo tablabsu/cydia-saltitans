@@ -1,3 +1,0 @@
-tgrabs -i C:\Users\dmckee\Documents\development\labdev\experiments\2021-05-10\video2\fiji-extremecontrast.avi -o C:\Users\dmckee\Documents\development\labdev\experiments\2021-05-10\video2\fiji-extremecontrast.pv -s "C:\Users\dmckee\Documents\development\labdev\tgrabs.settings"
-
-trex -i  C:\Users\dmckee\Documents\development\labdev\experiments\2021-05-10\video2\fiji-extremecontrast.pv -output_dir C:\Users\dmckee\Documents\development\labdev\experiments\2021-05-10\video2\fiji-extremecontrast\ -s C:\Users\dmckee\Documents\development\labdev\trex.settings
