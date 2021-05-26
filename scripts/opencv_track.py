@@ -30,10 +30,10 @@ def centroid_avg(cntrds):
 
 # Returns true if c is within factor percent of image borders
 def centroid_border(c, factor, shape):
-    height, width, channels = shape
+    height, width, _ = shape
     if c[0]['X'] <= factor*width or c[0]['X'] >= (1 - factor)*width:
         return True
-    elif c[0]['Y'] <= factor*height or c[0]['X'] >= (1 - factor)*height:
+    elif c[0]['Y'] <= factor*height or c[0]['Y'] >= (1 - factor)*height:
         return True
     return False
 
@@ -68,7 +68,7 @@ vs = cv2.VideoCapture(args['path'])
 cv2.namedWindow(WINDOW, cv2.WINDOW_NORMAL)
 cv2.resizeWindow(WINDOW, WINDOW_SIZE[0], WINDOW_SIZE[1])
 key = cv2.waitKey(1) & 0xFF
-while key != ord("q") and not quit:
+while True:
     # Read video frames
     ret, frame = vs.read()
     if not ret:
@@ -76,7 +76,7 @@ while key != ord("q") and not quit:
         break
 
     # Grab video frame dimensions
-    height, width, channels = frame.shape
+    height, width, _ = frame.shape
 
     # Convert frame to gray colorspace
     framegray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
@@ -95,19 +95,26 @@ while key != ord("q") and not quit:
             cY = int(M["m01"] / M["m00"])
             centroids.append(({'X': cX, 'Y': cY}, int(M['m00'])))
 
+    # Drawing deleted points, ranges, and size/coords if debug is on
+    if args.get("debug"):
+        for c in centroids:
+            cv2.circle(frame, (c[0]['X'], c[0]['Y']), 5, (0, 0, 255), -1)
+            cv2.circle(frame, (c[0]['X'], c[0]['Y']), int(CENTROID_MAX_RADIUS_PER * width), (0, 255, 255), 2)
+            cv2.putText(frame, "{0}\n{1}".format(c[1], (c[0]['X'], c[0]['Y'])), (c[0]['X'] + 25, c[0]['Y'] + 25), FONT, 1, (0, 0, 255), 2)
+        
     # Removing first centroid, formed by borders of image
     centroids = centroids[1:]
 
     # Removing centroids within 1% of border of image
     centroids = [c for c in centroids if not centroid_border(c, 0.01, frame.shape)]
-        
+
     # Pass over centroids, combine those within set radius into their weighted average centroid
     if not args.get("debug_disable_avg"):
         filtered_centroids = []
         centr = centroids
         while len(centr) > 0:
-            near = [centr[0]] + [i for i in centr if centroid_dist(centr[0][0], i[0]) <= (CENTROID_MAX_RADIUS_PER * width)]
-            centr = [i for i in centr if centroid_dist(centr[0][0], i[0]) > (CENTROID_MAX_RADIUS_PER * width)]
+            near = [centr[0]] + [i for i in centr[1:] if centroid_dist(centr[0][0], i[0]) <= (CENTROID_MAX_RADIUS_PER * width)]
+            centr = [i for i in centr[1:] if centroid_dist(centr[0][0], i[0]) > (CENTROID_MAX_RADIUS_PER * width)]
             filtered_centroids.append(centroid_avg(near))
     else:
         filtered_centroids = centroids
@@ -137,7 +144,17 @@ while key != ord("q") and not quit:
                 quit = True
                 break
             key = cv2.waitKey(1) & 0xFF
-            
+    elif key == ord("q") or quit:
+        logging.info("Quitting...")
+        vs.release()
+        cv2.destroyAllWindows()
+        sys.exit(0)
+logging.info("Releasing video stream...")
+vs.release()         
+logging.info("Processing complete.")
+
+while True:
+    break
+
 logging.info("Quitting...")
-vs.release()
 cv2.destroyAllWindows()
