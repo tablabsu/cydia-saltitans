@@ -188,7 +188,9 @@ logging.info("Releasing video stream...")
 vs.release()         
 logging.info("Processing complete.")
 
-with open("posdata.json", "w+") as fp:
+pos_path = list(os.path.split(args['path']))
+pos_path[-1] = 'pos_data.json'
+with open(os.path.join(*pos_path), "w+") as fp:
     json.dump(pos_data, fp)
 
 while True:
