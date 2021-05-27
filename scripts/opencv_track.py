@@ -158,15 +158,19 @@ while True:
                 pos_data["objects"][min_i]['Y'].append(c['Y'])
 
     # Draw resulting centroids
-    for (i, c) in enumerate(centroids):
-        cv2.circle(frame, (c['X'], c['Y']), 5, (255, 0, 0), -1)
-        cv2.putText(frame, "centroid {0}".format(i), (c['X'] - 25, c['Y'] - 25), FONT, 1, (255, 0, 0), 2)
+    for (i, _) in enumerate(centroids):
+        x = pos_data["objects"][i]['X'][-1]
+        y = pos_data["objects"][i]['Y'][-1]
+        cv2.circle(frame, (x, y), 5, (255, 0, 0), -1)
+        cv2.putText(frame, "object {0}".format(i), (x - 50, y - 50), FONT, 1, (255, 0, 0), 2)
 
     cp_frame = frame.copy()
     cv2.putText(cp_frame, "Frame {0} of {1}".format(frame_num, frame_total), (0, height - 10), FONT, 1, (0, 0, 255), 2)
+    cv2.putText(cp_frame, "< Playback Mode >", (10, 30), FONT, 1, (0, 0, 0), 2)
     drawn_frames.append(cp_frame)
     
     # Writing frame number
+    cv2.putText(frame, "< Processing Mode >", (10, 30), FONT, 1, (0, 0, 0), 2)
     cv2.putText(frame, "Processing frame {0} of {1}".format(frame_num, frame_total), (0, height - 10), FONT, 1, (0, 0, 255), 2)
     cv2.imshow(WINDOW, frame)
 
