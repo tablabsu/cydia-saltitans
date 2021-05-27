@@ -4,18 +4,11 @@ import sys, os, argparse, logging, math, json
 
 WINDOW = 'Contour and Centroid Calculation - OpenCV'
 WINDOW_SIZE = (1500, 1100)
+TRACKBAR_NAME = "Frame"
 FONT = cv2.FONT_HERSHEY_SIMPLEX 
 CENTROID_MAX_RADIUS_PER = 0.05 # Percentage of width two centroids must be within to be combined
 
 # --------- UTILITY METHODS --------- 
-
-# Returns number of frame, for sorting image files
-def strip_frame_number(im_prefix, im_path):
-    im_path = im_path.lstrip(im_prefix).split(".")[0]
-    if im_path == "":
-        return 0
-    else:
-        return int(im_path)
 
 # Returns scalar distance between centroid positions
 def centroid_dist(cp1, cp2):
@@ -37,6 +30,7 @@ def centroid_border(c, factor, shape):
         return True
     return False
 
+# Kills execution with error message, closes video handle and cv2 windows
 def kill_execution(errormsg, videohandle=None, spin=True):
     logging.warning(errormsg)
     if spin:
@@ -49,6 +43,11 @@ def kill_execution(errormsg, videohandle=None, spin=True):
     cv2.destroyAllWindows()
     sys.exit(1)
 
+# Function passed to frame trackbar
+def trackbar_update(val):
+    global current_frame
+    current_frame = val
+    cv2.imshow(WINDOW, drawn_frames[current_frame])
 
 # -----------------------------------
 
@@ -77,6 +76,7 @@ if not os.path.split(args['path'])[-1].endswith(".avi"):
     logging.warning("Given path does not point to a .avi file! Exiting...")
 
 pos_data = {"objects": []}
+drawn_frames = []
 quit = False
 vs = cv2.VideoCapture(args['path'])
 cv2.namedWindow(WINDOW, cv2.WINDOW_NORMAL)
@@ -161,9 +161,13 @@ while True:
     for (i, c) in enumerate(centroids):
         cv2.circle(frame, (c['X'], c['Y']), 5, (255, 0, 0), -1)
         cv2.putText(frame, "centroid {0}".format(i), (c['X'] - 25, c['Y'] - 25), FONT, 1, (255, 0, 0), 2)
+
+    cp_frame = frame.copy()
+    cv2.putText(cp_frame, "Frame {0} of {1}".format(frame_num, frame_total), (0, height - 10), FONT, 1, (0, 0, 255), 2)
+    drawn_frames.append(cp_frame)
     
     # Writing frame number
-    cv2.putText(frame, "Frame {0} of {1}".format(frame_num, frame_total), (0, height - 10), FONT, 1, (0, 0, 255), 2)
+    cv2.putText(frame, "Processing frame {0} of {1}".format(frame_num, frame_total), (0, height - 10), FONT, 1, (0, 0, 255), 2)
     cv2.imshow(WINDOW, frame)
 
     # Checking if a key was pressed
@@ -190,11 +194,36 @@ logging.info("Processing complete.")
 
 pos_path = list(os.path.split(args['path']))
 pos_path[-1] = 'pos_data.json'
-with open(os.path.join(*pos_path), "w+") as fp:
+pos_path = os.path.relpath(os.path.join(*pos_path))
+logging.info("Saving position data to '{0}'...".format(pos_path))
+with open(pos_path, "w+") as fp:
     json.dump(pos_data, fp)
+logging.info("Position data saved.")
 
+# Beginning playback
+logging.info("Beginning playback...")
+current_frame = 1
+paused = True
+cv2.createTrackbar(TRACKBAR_NAME, WINDOW, 0, len(drawn_frames) - 1, trackbar_update)
+cv2.imshow(WINDOW, drawn_frames[0])
 while True:
-    break
-
+    key = cv2.waitKey(1) & 0xFF
+    if key == ord("p"):
+        paused = True
+    if paused:
+        key = cv2.waitKey(1) & 0xFF
+        while key != ord("p"):
+            key = cv2.waitKey(1) & 0xFF
+            if key == ord("q"):
+                quit = True
+                break
+        paused = False
+    if key == ord("q") or quit:
+        break
+    current_frame += 1
+    if current_frame >= len(drawn_frames):
+        current_frame = 1
+    cv2.setTrackbarPos(TRACKBAR_NAME, WINDOW, current_frame)
+logging.info("Ending playback.")
 logging.info("Quitting...")
 cv2.destroyAllWindows()
