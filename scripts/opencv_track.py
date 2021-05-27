@@ -1,6 +1,6 @@
 import cv2
 import numpy as np
-import sys, os, argparse, logging, math
+import sys, os, argparse, logging, math, json
 
 WINDOW = 'Contour and Centroid Calculation - OpenCV'
 WINDOW_SIZE = (1500, 1100)
@@ -37,6 +37,19 @@ def centroid_border(c, factor, shape):
         return True
     return False
 
+def kill_execution(errormsg, videohandle=None, spin=True):
+    logging.warning(errormsg)
+    if spin:
+        key = cv2.waitKey(1) & 0xFF
+        while key != ord("q"):
+            key = cv2.waitKey(1) & 0xFF
+    logging.info("Quitting...")
+    if videohandle:
+        videohandle.release()
+    cv2.destroyAllWindows()
+    sys.exit(1)
+
+
 # -----------------------------------
 
 # Setting up argument parser
@@ -63,6 +76,7 @@ if not os.path.exists(args['path']):
 if not os.path.split(args['path'])[-1].endswith(".avi"):
     logging.warning("Given path does not point to a .avi file! Exiting...")
 
+pos_data = {"objects": []}
 quit = False
 vs = cv2.VideoCapture(args['path'])
 cv2.namedWindow(WINDOW, cv2.WINDOW_NORMAL)
@@ -74,6 +88,10 @@ while True:
     if not ret:
         logging.info("Video stream ended...")
         break
+
+    # Grab frame number and total frames
+    frame_num = int(vs.get(cv2.CAP_PROP_POS_FRAMES))
+    frame_total = int(vs.get(cv2.CAP_PROP_FRAME_COUNT))
 
     # Grab video frame dimensions
     height, width, _ = frame.shape
@@ -109,18 +127,35 @@ while True:
     centroids = [c for c in centroids if not centroid_border(c, 0.01, frame.shape)]
 
     # Pass over centroids, combine those within set radius into their weighted average centroid
-    if not args.get("debug_disable_avg"):
-        filtered_centroids = []
-        centr = centroids
-        while len(centr) > 0:
-            near = [centr[0]] + [i for i in centr[1:] if centroid_dist(centr[0][0], i[0]) <= (CENTROID_MAX_RADIUS_PER * width)]
-            centr = [i for i in centr[1:] if centroid_dist(centr[0][0], i[0]) > (CENTROID_MAX_RADIUS_PER * width)]
-            filtered_centroids.append(centroid_avg(near))
-    else:
-        filtered_centroids = centroids
+    filtered_centroids = []
+    while len(centroids) > 0:
+        # Average together all points within radius of selected point, update centroid list to all points not near selected point
+        near = [centroids[0]] + [i for i in centroids[1:] if centroid_dist(centroids[0][0], i[0]) <= (CENTROID_MAX_RADIUS_PER * width)]
+        centroids = [i for i in centroids[1:] if centroid_dist(centroids[0][0], i[0]) > (CENTROID_MAX_RADIUS_PER * width)]
+        filtered_centroids.append(centroid_avg(near))
 
-    # Removing area data for drawing
+    # Removing area data from centroids
     centroids = [c for (c, a) in filtered_centroids] 
+
+    if frame_num == 1:
+        [pos_data["objects"].append({'X': [c['X']], 'Y': [c['Y']]}) for (i, c) in enumerate(centroids)]
+    else:
+        for c in centroids: 
+            # Grabbing positions of all objects from last frame
+            last_pos = [{'X': o['X'][-1], 'Y': o['Y'][-1]} for o in pos_data['objects']]
+            
+            # Find last frame object closest to current point
+            min_i = -1
+            min_dist = max([height, width]) + 1
+            for (i, pos) in enumerate(last_pos):
+                if centroid_dist(c, pos) < min_dist:
+                    min_i = i
+                    min_dist = centroid_dist(c, pos)
+            if min_i == -1:
+                kill_execution("Error: Could not match centroid to object!", vs)
+            else:
+                pos_data["objects"][min_i]['X'].append(c['X'])
+                pos_data["objects"][min_i]['Y'].append(c['Y'])
 
     # Draw resulting centroids
     for (i, c) in enumerate(centroids):
@@ -128,7 +163,7 @@ while True:
         cv2.putText(frame, "centroid {0}".format(i), (c['X'] - 25, c['Y'] - 25), FONT, 1, (255, 0, 0), 2)
     
     # Writing frame number
-    cv2.putText(frame, "Frame {0} of {1}".format(int(vs.get(cv2.CAP_PROP_POS_FRAMES)), int(vs.get(cv2.CAP_PROP_FRAME_COUNT))), (0, height - 10), FONT, 1, (0, 0, 255), 2)
+    cv2.putText(frame, "Frame {0} of {1}".format(frame_num, frame_total), (0, height - 10), FONT, 1, (0, 0, 255), 2)
     cv2.imshow(WINDOW, frame)
 
     # Checking if a key was pressed
@@ -152,6 +187,9 @@ while True:
 logging.info("Releasing video stream...")
 vs.release()         
 logging.info("Processing complete.")
+
+with open("posdata.json", "w+") as fp:
+    json.dump(pos_data, fp)
 
 while True:
     break
