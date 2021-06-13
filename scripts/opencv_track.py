@@ -166,11 +166,11 @@ while True:
 
     cp_frame = frame.copy()
     cv2.putText(cp_frame, "Frame {0} of {1}".format(frame_num, frame_total), (0, height - 10), FONT, 1, (0, 0, 255), 2)
-    cv2.putText(cp_frame, "< Playback Mode >", (10, 30), FONT, 1, (0, 0, 0), 2)
+    cv2.putText(cp_frame, "<Playback Mode>", (10, 30), FONT, 1, (0, 0, 0), 2)
     drawn_frames.append(cp_frame)
     
     # Writing frame number
-    cv2.putText(frame, "< Processing Mode >", (10, 30), FONT, 1, (0, 0, 0), 2)
+    cv2.putText(frame, "<Processing Mode>", (10, 30), FONT, 1, (0, 0, 0), 2)
     cv2.putText(frame, "Processing frame {0} of {1}".format(frame_num, frame_total), (0, height - 10), FONT, 1, (0, 0, 255), 2)
     cv2.imshow(WINDOW, frame)
 
