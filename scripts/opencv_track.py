@@ -98,8 +98,8 @@ while True:
 
     # Convert frame to gray colorspace
     framegray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-    # Apply a threshold filter at 127 (middle gray)
-    ret, threshold = cv2.threshold(framegray, 127, 255, 0)
+    # Apply a threshold filter
+    ret, threshold = cv2.threshold(framegray, 200, 255, 0)
     # Find and draw contours using cv2 simple chain approximation
     contours, hierarchy = cv2.findContours(threshold, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
     cv2.drawContours(frame, contours, -1, (0, 255, 0), 3)
