@@ -3,17 +3,15 @@ import sys, os, argparse, logging
 import imageio
 import numpy as np
 import cv2
-from skimage import io, filters, exposure
+#from scikit import io, filters, exposure
 
 # Script constants here
-EXPERIMENTS_PATH = os.path.join(os.pardir, "experiments")
 IMAGE_PREFIX = "Image"
 
 # Setting up argument parser
 parser = argparse.ArgumentParser(description="Preprocess videos for tracking using Fiji.")
-parser.add_argument("experiment", help="Path to experiment in ../experiments, generally 'date/video'")
-parser.add_argument("-nb", "--no-blur", action="store_true", help="Disable gaussian blur preprocessing")
-parser.add_argument("-nc", "--no-contrast", action="store_true", help="Disable high contrast preprocessing")
+parser.add_argument("path", help="Path to image frames")
+parser.add_argument("-nfx", "--nofx", action="store_true", help="Disable filtering video, just dump raw frames")
 parser.add_argument("-d", "--debug", action="store_true", help="Show debug information")
 args = vars(parser.parse_args())
 
@@ -53,30 +51,45 @@ def process_frames(frames, frames_path, video):
         logging.info("Processing frame {0}".format(strip_frame_number(IMAGE_PREFIX, frame)))
         
         # Read frame file
-        f = io.imread(os.path.join(frames_path, frame))
+        f = cv2.imread(os.path.join(frames_path, frame))
 
-        # Apply gaussian blur
-        #if not args.get("no_blur"):
-        #    f = filters.gaussian(f, 5)
+        if not args.get("nofx"):
+            # Apply gaussian blur
+            #f = filters.gaussian(f, 5)
 
-        # Apply high contrast
-        f = cv2.addWeighted(f, 1.6, f, 0, 0)
-        
-        # Apply histogram equalization
-        #f = exposure.equalize_hist(f) # testing histogram equalization 
+            # Apply high contrast
+            f = cv2.addWeighted(f, 1.5, f, 0, 0)
+            
+            # Convert to grayscale (for histogram eq.)
+            #f = cv2.cvtColor(f, cv2.COLOR_BGR2GRAY)
+
+            # Apply histogram equalization
+            #f = cv2.equalizeHist(f) 
+            #clahe = cv2.createCLAHE()
+            #f = clahe.apply(f)
+            #_, f = cv2.threshold(f, 160, 255, cv2.THRESH_BINARY)
+
+            # Convert back to BGR for video writing
+            #f = cv2.cvtColor(f, cv2.COLOR_GRAY2BGR)
 
         # Write frame to video
-        video.append_data(f)
-
+        video.write(f)
 
 if __name__ == "__main__":
     try:            
-        v = imageio.get_writer(os.path.join(args["experiment"], "video.avi"), mode="I", fps=1)
-        frames_path = os.path.join(args["experiment"])
+        #v = imageio.get_writer(os.path.join(args["path"], "video.avi"), mode="I", fps=1)
+        frames_path = os.path.join(args["path"])
         frames = list_frames(frames_path)
+        height, width, _ = cv2.imread(os.path.join(args['path'], frames[0])).shape
+        fourcc = cv2.VideoWriter_fourcc(*'mp4v')
+        v_name = "video.mp4"
+        if args.get("nofx"):
+            v_name = "video-nofx.mp4"
+        v = cv2.VideoWriter(os.path.join(args['path'], v_name), fourcc, 1, (width, height))
         process_frames(frames, frames_path, v)
         logging.info("Finalizing video...")
-        v.close()
+        cv2.destroyAllWindows()
+        v.release()
         logging.info("Preprocessing complete!")
     except KeyboardInterrupt:
         logging.warning("Interrupted! Exiting...")

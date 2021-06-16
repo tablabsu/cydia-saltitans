@@ -2,7 +2,6 @@
 import sys, os, argparse, logging, json, math
 import numpy as np
 from matplotlib import pyplot as plt
-from matplotlib import animation
 
 # --------- UTILITY METHODS --------- 
 
@@ -46,15 +45,16 @@ logging.info("Calculating MSD data...")
 objects_msd = []
 for obj in objects:
     o = { 'tau': [], 'msd': [] }
-    tau = range(1, len(obj['X']))
+    tau = range(1, int(len(obj['X']) / 2))
     for t in tau:
         # Pull out X and Y coordinate lists
         tau_x = obj['X']
         tau_y = obj['Y']
 
-        # Calculate distance between points apart by interval tau
+        # Calculate distance between points apart by interval tau, then square displacement
         tau_dist = [dist(tau_x[i], tau_y[i], tau_x[i+t], tau_y[i+t]) for i in range(len(tau_x) - t)]
-        
+        tau_dist = [math.pow(i, 2) for i in tau_dist]
+
         # Average the displacement of those intervals
         msd = sum(tau_dist) / len(tau_dist)
 
@@ -80,12 +80,12 @@ for i, obj in enumerate(objects_msd):
     plt.plot(tau, p(tau), '--', label="Object {1} slope: {0:.2f}".format(pf[0], i))
 
 plt.title("Log MSD over Log Tau")
-plt.xlabel("Log Tau")
-plt.ylabel("Log MSD")
+plt.xlabel("Log Tau (pixels)")
+plt.ylabel("Log MSD (pixels)")
 plt.legend()
 plt.show()
 
-if input("Save figure?").lower() in ('y', 'yes'):
+if input("Save figure? ").lower() in ('y', 'yes'):
     logging.info("Saving figure...")
     plt.tight_layout()
     fig.savefig("figure", dpi=144)

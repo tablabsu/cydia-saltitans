@@ -45,9 +45,38 @@ def kill_execution(errormsg, videohandle=None, spin=True):
 
 # Function passed to frame trackbar
 def trackbar_update(val):
-    global current_frame
+    global current_frame 
     current_frame = val
-    cv2.imshow(WINDOW, drawn_frames[current_frame])
+    f = drawn_frames[current_frame].copy()
+    cv2.putText(f, "<Playback Mode>", (10, 30), FONT, 1, (0, 0, 0), 2)
+    cv2.imshow(WINDOW, f)
+
+# Confirms the user wants to save, then saves video
+def save_tracking_video(frame):
+    f = frame.copy()
+    height, width, _ = f.shape
+    cv2.putText(f, "<Playback Mode>", (10, 30), FONT, 1, (0, 0, 0), 2)
+    cv2.putText(f, "Save to video? Press S again to confirm or Q to exit saving...", (int(width/2) - (width * 0.25), int(height/2)), FONT, 1, (0, 0, 0), 2)
+    cv2.imshow(WINDOW, f)
+    key = cv2.waitKey(1) & 0xFF
+    while True:
+        key = cv2.waitKey(1) & 0xFF
+        if key == ord("s"):
+            logging.info("Processing video...")
+            # Saving drawn frames to file
+            global drawn_frames
+            height, width, _ = drawn_frames[0].shape
+            fourcc = cv2.VideoWriter_fourcc(*'mp4v')
+            v_name = "track_output.mp4"
+            v = cv2.VideoWriter(v_name, fourcc, 1, (width, height))
+            for f in drawn_frames:
+                v.write(f)
+            v.release()
+            logging.info("Video saved to '{0}'".format(v_name))
+            break
+        elif key == ord("q"):
+            logging.debug("Canceling save...")
+            break
 
 # -----------------------------------
 
@@ -71,11 +100,12 @@ if not os.path.exists(args['path']):
     logging.warning("Given path does not exist! Exiting...")
     sys.exit(1)
 
-# Checking that given path points to an avi file
-if not os.path.split(args['path'])[-1].endswith(".avi"):
-    logging.warning("Given path does not point to a .avi file! Exiting...")
+# Checking that given path points to an avi or mp4 file
+if not os.path.split(args['path'])[-1].endswith(".avi") and not os.path.split(args['path'])[-1].endswith(".mp4"):
+    logging.warning("Given path does not point to a .avi or .mp4 file! Exiting...")
+    sys.exit(1)
 
-pos_data = {"objects": []}
+pos_data = {"objects": [], "canvas": {}}
 drawn_frames = []
 quit = False
 vs = cv2.VideoCapture(args['path'])
@@ -93,8 +123,11 @@ while True:
     frame_num = int(vs.get(cv2.CAP_PROP_POS_FRAMES))
     frame_total = int(vs.get(cv2.CAP_PROP_FRAME_COUNT))
 
-    # Grab video frame dimensions
+    # Grab video frame dimensions, update canvas size
     height, width, _ = frame.shape
+    if not pos_data['canvas']:
+        pos_data['canvas']['height'] = height
+        pos_data['canvas']['width'] = width
 
     # Convert frame to gray colorspace
     framegray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
@@ -138,7 +171,7 @@ while True:
     centroids = [c for (c, a) in filtered_centroids] 
 
     if frame_num == 1:
-        [pos_data["objects"].append({'X': [c['X']], 'Y': [c['Y']]}) for (i, c) in enumerate(centroids)]
+        [pos_data["objects"].append({'X': [c['X']], 'Y': [c['Y']]}) for c in centroids]
     else:
         for c in centroids: 
             # Grabbing positions of all objects from last frame
@@ -166,7 +199,6 @@ while True:
 
     cp_frame = frame.copy()
     cv2.putText(cp_frame, "Frame {0} of {1}".format(frame_num, frame_total), (0, height - 10), FONT, 1, (0, 0, 255), 2)
-    cv2.putText(cp_frame, "<Playback Mode>", (10, 30), FONT, 1, (0, 0, 0), 2)
     drawn_frames.append(cp_frame)
     
     # Writing frame number
@@ -206,10 +238,12 @@ logging.info("Position data saved.")
 
 # Beginning playback
 logging.info("Beginning playback...")
-current_frame = 1
+current_frame = 0
 paused = True
 cv2.createTrackbar(TRACKBAR_NAME, WINDOW, 0, len(drawn_frames) - 1, trackbar_update)
-cv2.imshow(WINDOW, drawn_frames[0])
+f = drawn_frames[0].copy()
+cv2.putText(f, "<Playback Mode>", (10, 30), FONT, 1, (0, 0, 0), 2)
+cv2.imshow(WINDOW, f)
 while True:
     key = cv2.waitKey(1) & 0xFF
     if key == ord("p"):
@@ -221,12 +255,20 @@ while True:
             if key == ord("q"):
                 quit = True
                 break
+            elif key == ord("s"):
+                save_tracking_video(drawn_frames[current_frame])
+            f = drawn_frames[current_frame].copy()
+            cv2.putText(f, "<Playback Mode>", (10, 30), FONT, 1, (0, 0, 0), 2)
+            cv2.putText(f, "{PAUSED}", (10, 70), FONT, 1, (0, 0, 255), 2)
+            cv2.imshow(WINDOW, f)
         paused = False
     if key == ord("q") or quit:
         break
+    if key == ord("s"):
+        save_tracking_video(drawn_frames[current_frame])
     current_frame += 1
     if current_frame >= len(drawn_frames):
-        current_frame = 1
+        current_frame = 0
     cv2.setTrackbarPos(TRACKBAR_NAME, WINDOW, current_frame)
 logging.info("Ending playback.")
 logging.info("Quitting...")
