@@ -240,6 +240,7 @@ logging.info("Releasing video stream...")
 vs.release()         
 logging.info("Processing complete.")
 
+# Saving position data to pos_data.json
 pos_path = list(os.path.split(args['path']))
 pos_path[-1] = 'pos_data.json'
 pos_path = os.path.relpath(os.path.join(*pos_path))

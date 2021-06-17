@@ -12,3 +12,5 @@ venv/
 *.avi
 *.jpg
 *.bmp
+*.jpg
+*.png
