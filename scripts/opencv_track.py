@@ -56,7 +56,7 @@ def save_tracking_video(frame):
     f = frame.copy()
     height, width, _ = f.shape
     cv2.putText(f, "<Playback Mode>", (10, 30), FONT, 1, (0, 0, 0), 2)
-    cv2.putText(f, "Save to video? Press S again to confirm or Q to exit saving...", (int(width/2) - (width * 0.25), int(height/2)), FONT, 1, (0, 0, 0), 2)
+    cv2.putText(f, "Save to video? Press S again to confirm or Q to exit saving...", (int((width/2) - (width * 0.25)), int(height/2)), FONT, 1, (0, 0, 0), 2)
     cv2.imshow(WINDOW, f)
     key = cv2.waitKey(1) & 0xFF
     while True:
@@ -78,13 +78,19 @@ def save_tracking_video(frame):
             logging.debug("Canceling save...")
             break
 
+# Converts units from pixels to given units
+def convert_units(pix, pix_dim, real_dim):
+    return round(pix * (real_dim/pix_dim), 3)
+
 # -----------------------------------
 
 # Setting up argument parser
 parser = argparse.ArgumentParser(description="Object tracking OpenCV contour detection, centroid calculation, and tracking algorithms")
 parser.add_argument("path", help="Path to video, ending in .avi")
+parser.add_argument("-rw", "--real-width", type=float, help="Real width of canvas, otherwise uses image height")
+parser.add_argument("-rh", "--real-height", type=float, help="Real height of canvas, otherwise uses image height")
+parser.add_argument("-u", "--units",  help="Units for canvas, defaults to 'pixels'")
 parser.add_argument("-d", "--debug", action="store_true", help="Show debug information")
-parser.add_argument("--debug-disable-avg", action="store_true", help="DEBUG: Disable averaging nearby centroids")
 args = vars(parser.parse_args())
 
 # Setting up logger
@@ -106,6 +112,7 @@ if not os.path.split(args['path'])[-1].endswith(".avi") and not os.path.split(ar
     sys.exit(1)
 
 pos_data = {"objects": [], "canvas": {}}
+raw_data = []
 drawn_frames = []
 quit = False
 vs = cv2.VideoCapture(args['path'])
@@ -126,8 +133,9 @@ while True:
     # Grab video frame dimensions, update canvas size
     height, width, _ = frame.shape
     if not pos_data['canvas']:
-        pos_data['canvas']['height'] = height
-        pos_data['canvas']['width'] = width
+        pos_data['canvas']['width'] = args.get("real_width", width)
+        pos_data['canvas']['height'] = args.get("real_height", height)
+        pos_data['canvas']['units'] = args.get("units", "pixels")
 
     # Convert frame to gray colorspace
     framegray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
@@ -171,12 +179,13 @@ while True:
     centroids = [c for (c, a) in filtered_centroids] 
 
     if frame_num == 1:
-        [pos_data["objects"].append({'X': [c['X']], 'Y': [c['Y']]}) for c in centroids]
+        # Creating structure on first frame (converting units if necessary)
+        raw_data = [{'X': [c['X']], 'Y': [c['Y']]} for c in centroids]
+        pos_data['objects'] = [{'X': [convert_units(c['X'], width, args.get("real_width", width))], 'Y': [convert_units(c['Y'], height, args.get("real_height", height))]} for c in centroids]
     else:
         for c in centroids: 
             # Grabbing positions of all objects from last frame
-            last_pos = [{'X': o['X'][-1], 'Y': o['Y'][-1]} for o in pos_data['objects']]
-            
+            last_pos = [{'X': o['X'][-1], 'Y': o['Y'][-1]} for o in raw_data]
             # Find last frame object closest to current point
             min_i = -1
             min_dist = max([height, width]) + 1
@@ -187,13 +196,16 @@ while True:
             if min_i == -1:
                 kill_execution("Error: Could not match centroid to object!", vs)
             else:
-                pos_data["objects"][min_i]['X'].append(c['X'])
-                pos_data["objects"][min_i]['Y'].append(c['Y'])
+                #  Writing positions to position data (converting if necessary)
+                raw_data[min_i]['X'].append(c['X'])
+                raw_data[min_i]['Y'].append(c['Y'])
+                pos_data["objects"][min_i]['X'].append(convert_units(c['X'], width, args.get("real_width", width)))
+                pos_data["objects"][min_i]['Y'].append(convert_units(c['Y'], height, args.get("real_height", height)))
 
     # Draw resulting centroids
     for (i, _) in enumerate(centroids):
-        x = pos_data["objects"][i]['X'][-1]
-        y = pos_data["objects"][i]['Y'][-1]
+        x = raw_data[i]['X'][-1]
+        y = raw_data[i]['Y'][-1]
         cv2.circle(frame, (x, y), 5, (255, 0, 0), -1)
         cv2.putText(frame, "object {0}".format(i), (x - 50, y - 50), FONT, 1, (255, 0, 0), 2)
 

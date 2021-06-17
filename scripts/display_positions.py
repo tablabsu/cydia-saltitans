@@ -48,9 +48,9 @@ logging.info("Setting up plots...")
 fig, ax = plt.subplots()
 ax.set_xlim(0, canvas['width'])
 ax.set_ylim(canvas['height'], 0) 
-ax.set_xlabel("X position (pixels)")
-ax.set_ylabel("Y position (pixels)")
-ax.set_title("Jumping Bean Coordinates")
+ax.set_xlabel("X position ({0})".format(canvas['units']))
+ax.set_ylabel("Y position ({0})".format(canvas['units']))
+ax.set_title("Jumping Bean Coordinates ({0})".format(canvas['units']))
 ax.xaxis.tick_top()
 
 plot = plt.scatter([], [])
@@ -59,7 +59,7 @@ plot = plt.scatter([], [])
 logging.info("Setting up animation...")
 def update_anim(i):
     plot.set_offsets(np.array((i['X'], i['Y'])).T)
-    ax.set_title("Jumping Bean Coordinates, Frame {0}".format(i["number"]))
+    ax.set_title("Jumping Bean Coordinates ({1}), Frame {0}".format(i["number"], canvas['units']))
     return plot
 anim = animation.FuncAnimation(fig, update_anim, frames=frames)
 

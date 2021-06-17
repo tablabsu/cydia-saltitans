@@ -34,11 +34,13 @@ if not os.path.split(args["path"])[-1].endswith(".json"):
     sys.exit(1)
 
 objects = []
+canvas = {}
 # Read position data from file
 logging.info("Reading position data...")
 with open(args['path']) as fp:
     data = json.load(fp)
     objects = data["objects"]
+    canvas = data['canvas']
 
 # Calculate MSD data from objects
 logging.info("Calculating MSD data...")
@@ -79,9 +81,9 @@ for i, obj in enumerate(objects_msd):
     p = np.poly1d(pf)
     plt.plot(tau, p(tau), '--', label="Object {1} slope: {0:.2f}".format(pf[0], i))
 
-plt.title("Log MSD over Log Tau")
-plt.xlabel("Log Tau (pixels)")
-plt.ylabel("Log MSD (pixels)")
+plt.title("Log MSD over Log Tau ({0})".format(canvas['units']))
+plt.xlabel("Log Tau")
+plt.ylabel("Log MSD ({0})".format(canvas['units']))
 plt.legend()
 plt.show()
 
