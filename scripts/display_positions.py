@@ -26,7 +26,7 @@ if not os.path.split(args["path"])[-1].endswith(".json"):
     logging.warning("Given path does not point to a .json file! Exiting...")
     sys.exit(1)
 
-# Read position data into file, move into correct format to display frames
+# Read position data from file, move into correct format to display frames
 frames = []
 canvas = {}
 with open(args['path']) as fp:

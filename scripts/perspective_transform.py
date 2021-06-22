@@ -5,7 +5,6 @@ import sys, os, argparse, logging
 
 IMAGE_ENDINGS = ("jpg", "bmp", "jpeg", "png")
 IMAGE_PREFIX = "Image"
-RESIZE_FACTOR = (8.5/11)
 WINDOW = 'Perspective Transformation - OpenCV'
 WINDOW_SIZE = (1500, 1100)
 FONT = cv2.FONT_HERSHEY_SIMPLEX
@@ -103,7 +102,7 @@ while True:
                 transform_coords = np.float32(order_points(coords))
                 matrix = cv2.getPerspectiveTransform(transform_coords, image_coords)
                 image = cv2.warpPerspective(image, matrix, (width, height))
-                image = cv2.resize(image, (width, int(width*RESIZE_FACTOR)))
+                image = cv2.resize(image, (width, height))
                 cv2.imwrite(os.path.join(args['path'], "transformed", im), image)
                 cv2.putText(image, "Processing image {0} out of {1}".format(i + 1, len(im_files)), (0, int(width*RESIZE_FACTOR) - 10), FONT, 1, (0, 0, 255), 2)
                 cv2.imshow(WINDOW, image)

@@ -6,7 +6,7 @@ WINDOW = 'Contour and Centroid Calculation - OpenCV'
 WINDOW_SIZE = (1500, 1100)
 TRACKBAR_NAME = "Frame"
 FONT = cv2.FONT_HERSHEY_SIMPLEX 
-CENTROID_MAX_RADIUS_PER = 0.05 # Percentage of width two centroids must be within to be combined
+CENTROID_MAX_RADIUS_PER = 0.04 # Percentage of width two centroids must be within to be combined
 
 # --------- UTILITY METHODS --------- 
 
@@ -51,33 +51,6 @@ def trackbar_update(val):
     cv2.putText(f, "<Playback Mode>", (10, 30), FONT, 1, (0, 0, 0), 2)
     cv2.imshow(WINDOW, f)
 
-# Confirms the user wants to save, then saves video
-def save_tracking_video(frame):
-    f = frame.copy()
-    height, width, _ = f.shape
-    cv2.putText(f, "<Playback Mode>", (10, 30), FONT, 1, (0, 0, 0), 2)
-    cv2.putText(f, "Save to video? Press S again to confirm or Q to exit saving...", (int((width/2) - (width * 0.25)), int(height/2)), FONT, 1, (0, 0, 0), 2)
-    cv2.imshow(WINDOW, f)
-    key = cv2.waitKey(1) & 0xFF
-    while True:
-        key = cv2.waitKey(1) & 0xFF
-        if key == ord("s"):
-            logging.info("Processing video...")
-            # Saving drawn frames to file
-            global drawn_frames
-            height, width, _ = drawn_frames[0].shape
-            fourcc = cv2.VideoWriter_fourcc(*'mp4v')
-            v_name = "track_output.mp4"
-            v = cv2.VideoWriter(v_name, fourcc, 1, (width, height))
-            for f in drawn_frames:
-                v.write(f)
-            v.release()
-            logging.info("Video saved to '{0}'".format(v_name))
-            break
-        elif key == ord("q"):
-            logging.debug("Canceling save...")
-            break
-
 # Converts units from pixels to given units
 def convert_units(pix, pix_dim, real_dim):
     return round(pix * (real_dim/pix_dim), 3)
@@ -113,8 +86,9 @@ if not os.path.split(args['path'])[-1].endswith(".avi") and not os.path.split(ar
 
 pos_data = {"objects": [], "canvas": {}}
 raw_data = []
-drawn_frames = []
 quit = False
+fourcc = cv2.VideoWriter_fourcc(*'mp4v')
+vw = None
 vs = cv2.VideoCapture(args['path'])
 cv2.namedWindow(WINDOW, cv2.WINDOW_NORMAL)
 cv2.resizeWindow(WINDOW, WINDOW_SIZE[0], WINDOW_SIZE[1])
@@ -136,6 +110,10 @@ while True:
         pos_data['canvas']['width'] = args.get("real_width", width)
         pos_data['canvas']['height'] = args.get("real_height", height)
         pos_data['canvas']['units'] = args.get("units", "pixels")
+
+    # Create VideoWriter if not created already
+    if not vw:
+        vw = cv2.VideoWriter('track-output.mp4', fourcc, 1, (width, height))
 
     # Convert frame to gray colorspace
     framegray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
@@ -159,13 +137,16 @@ while True:
         for c in centroids:
             cv2.circle(frame, (c[0]['X'], c[0]['Y']), 5, (0, 0, 255), -1)
             cv2.circle(frame, (c[0]['X'], c[0]['Y']), int(CENTROID_MAX_RADIUS_PER * width), (0, 255, 255), 2)
-            cv2.putText(frame, "{0}\n{1}".format(c[1], (c[0]['X'], c[0]['Y'])), (c[0]['X'] + 25, c[0]['Y'] + 25), FONT, 1, (0, 0, 255), 2)
+            cv2.putText(frame, "{0}\n{1}".format(c[1], (c[0]['X'], c[0]['Y'])), (c[0]['X'] + 25, c[0]['Y'] + 25), FONT, 0.5, (0, 0, 255), 2)
         
     # Removing first centroid, formed by borders of image
     centroids = centroids[1:]
 
+    # Removing centroids over size threshold
+    centroids = [c for c in centroids if c[1] < 1000000]
+
     # Removing centroids within 1% of border of image
-    centroids = [c for c in centroids if not centroid_border(c, 0.01, frame.shape)]
+    centroids = [c for c in centroids if not centroid_border(c, 0.05, frame.shape)]
 
     # Pass over centroids, combine those within set radius into their weighted average centroid
     filtered_centroids = []
@@ -203,7 +184,7 @@ while True:
                 pos_data["objects"][min_i]['Y'].append(convert_units(c['Y'], height, args.get("real_height", height)))
 
     # Draw resulting centroids
-    for (i, _) in enumerate(centroids):
+    for i in range(len(raw_data)):
         x = raw_data[i]['X'][-1]
         y = raw_data[i]['Y'][-1]
         cv2.circle(frame, (x, y), 5, (255, 0, 0), -1)
@@ -211,7 +192,7 @@ while True:
 
     cp_frame = frame.copy()
     cv2.putText(cp_frame, "Frame {0} of {1}".format(frame_num, frame_total), (0, height - 10), FONT, 1, (0, 0, 255), 2)
-    drawn_frames.append(cp_frame)
+    vw.write(cp_frame)
     
     # Writing frame number
     cv2.putText(frame, "<Processing Mode>", (10, 30), FONT, 1, (0, 0, 0), 2)
@@ -236,8 +217,10 @@ while True:
         vs.release()
         cv2.destroyAllWindows()
         sys.exit(0)
-logging.info("Releasing video stream...")
+logging.info("Releasing video read stream...")
 vs.release()         
+logging.info("Releasing video write stream...")
+vw.release()
 logging.info("Processing complete.")
 
 # Saving position data to pos_data.json
@@ -248,41 +231,5 @@ logging.info("Saving position data to '{0}'...".format(pos_path))
 with open(pos_path, "w+") as fp:
     json.dump(pos_data, fp)
 logging.info("Position data saved.")
-
-# Beginning playback
-logging.info("Beginning playback...")
-current_frame = 0
-paused = True
-cv2.createTrackbar(TRACKBAR_NAME, WINDOW, 0, len(drawn_frames) - 1, trackbar_update)
-f = drawn_frames[0].copy()
-cv2.putText(f, "<Playback Mode>", (10, 30), FONT, 1, (0, 0, 0), 2)
-cv2.imshow(WINDOW, f)
-while True:
-    key = cv2.waitKey(1) & 0xFF
-    if key == ord("p"):
-        paused = True
-    if paused:
-        key = cv2.waitKey(1) & 0xFF
-        while key != ord("p"):
-            key = cv2.waitKey(1) & 0xFF
-            if key == ord("q"):
-                quit = True
-                break
-            elif key == ord("s"):
-                save_tracking_video(drawn_frames[current_frame])
-            f = drawn_frames[current_frame].copy()
-            cv2.putText(f, "<Playback Mode>", (10, 30), FONT, 1, (0, 0, 0), 2)
-            cv2.putText(f, "{PAUSED}", (10, 70), FONT, 1, (0, 0, 255), 2)
-            cv2.imshow(WINDOW, f)
-        paused = False
-    if key == ord("q") or quit:
-        break
-    if key == ord("s"):
-        save_tracking_video(drawn_frames[current_frame])
-    current_frame += 1
-    if current_frame >= len(drawn_frames):
-        current_frame = 0
-    cv2.setTrackbarPos(TRACKBAR_NAME, WINDOW, current_frame)
-logging.info("Ending playback.")
 logging.info("Quitting...")
 cv2.destroyAllWindows()

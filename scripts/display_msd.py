@@ -81,9 +81,9 @@ for i, obj in enumerate(objects_msd):
     p = np.poly1d(pf)
     plt.plot(tau, p(tau), '--', label="Object {1} slope: {0:.2f}".format(pf[0], i))
 
-plt.title("Log MSD over Log Tau ({0})".format(canvas['units']))
+plt.title("Log MSD over Log Tau")
 plt.xlabel("Log Tau")
-plt.ylabel("Log MSD ({0})".format(canvas['units']))
+plt.ylabel("Log MSD ({0})".format(canvas['units'] + "^2"))
 plt.legend()
 plt.show()
 
