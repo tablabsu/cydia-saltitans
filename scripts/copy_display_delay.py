@@ -66,9 +66,16 @@ for o in obj_i:
         if disp < threshold:
             d += 1
         else:
-            delays.append(d)
+            delays.append((disp, d))
             d = 1
     obj_delays.append(delays)
+
+print(threshold)
+'''print(obj_delays[1])
+disps = []
+for i in range(len(objects[1]['X']) - 1):
+    disps.append(dist(objects[1]['X'][i], objects[1]['Y'][i], objects[1]['X'][i+1], objects[1]['Y'][i+1]))
+print(disps)'''
 
 # Setting up plots
 logging.info("Setting up plots...")
@@ -81,11 +88,17 @@ if args['bin_factor']:
     bin_factor = args['bin_factor']
 for i, d in enumerate(obj_delays):
     bins = 1
+    d = [x[1] for x in d]
     if len(d) > 0:
         bins = int(max(d) * bin_factor)
     plt.hist(d, bins=bins, label="Object {0}".format(i))
 if len(obj_delays) > 1:
     plt.legend()
+plt.show()
+
+x = [i[1] for i in obj_delays[1]]
+y = [i[0] for i in obj_delays[1]]
+debugplot = plt.scatter(x, y, s=200)
 plt.show()
 
 # Saving figure

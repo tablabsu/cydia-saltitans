@@ -70,8 +70,8 @@ logging.info("Setting up plots...")
 fig, ax = plt.subplots()
 for i, obj in enumerate(objects_msd):
     # Calculate natural log of tau and msd
-    tau = [math.log(i) if i != 0 else i for i in obj['tau']]
-    msd = [math.log(i) if i != 0 else i for i in obj['msd']]
+    tau = [math.log(i, 10) if i != 0 else i for i in obj['tau']]
+    msd = [math.log(i, 10) if i != 0 else i for i in obj['msd']]
 
     # Plot scatter of log tau/msd
     plt.scatter(tau, msd)
