@@ -51,9 +51,9 @@ def convert_units(pix, pix_dim, real_dim):
 
 # Setting up argument parser
 parser = argparse.ArgumentParser(description="Object tracking OpenCV contour detection, centroid calculation, and tracking algorithms")
-parser.add_argument("path", help="Path to video, ending in .avi")
-parser.add_argument("-rw", "--real-width", type=float, help="Real width of canvas, otherwise uses image height")
-parser.add_argument("-rh", "--real-height", type=float, help="Real height of canvas, otherwise uses image height")
+parser.add_argument("path", help="Path to video, ending in .avi or .mp4")
+parser.add_argument("-rw", "--real-width", type=float, help="Real width of canvas, defaults to image height")
+parser.add_argument("-rh", "--real-height", type=float, help="Real height of canvas, defaults to image height")
 parser.add_argument("-u", "--units",  help="Units for canvas, defaults to 'pixels'")
 parser.add_argument("-d", "--debug", action="store_true", help="Show debug information")
 args = vars(parser.parse_args())

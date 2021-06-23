@@ -5,7 +5,7 @@ from matplotlib import pyplot as plt
 from matplotlib import animation
 
 # Setting up argument parser
-parser = argparse.ArgumentParser(description="Display position from json position data files'")
+parser = argparse.ArgumentParser(description="Display position from json position data files")
 parser.add_argument("path", help="Path to file containing position data")
 parser.add_argument("-d", "--debug", action="store_true", help="Show debug information")
 args = vars(parser.parse_args())
