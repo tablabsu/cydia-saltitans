@@ -58,7 +58,7 @@ def process_frames(frames, frames_path, video):
             #f = filters.gaussian(f, 5)
 
             # Apply high contrast
-            f = cv2.addWeighted(f, 1.4, f, 0, 0)
+            f = cv2.addWeighted(f, 1.5, f, 0, 0)
             
             # Convert to grayscale (for histogram eq.)
             #f = cv2.cvtColor(f, cv2.COLOR_BGR2GRAY)

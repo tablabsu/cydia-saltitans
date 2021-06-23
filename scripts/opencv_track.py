@@ -6,7 +6,7 @@ WINDOW = 'Contour and Centroid Calculation - OpenCV'
 WINDOW_SIZE = (1500, 1100)
 TRACKBAR_NAME = "Frame"
 FONT = cv2.FONT_HERSHEY_SIMPLEX 
-CENTROID_MAX_RADIUS_PER = 0.04 # Percentage of width two centroids must be within to be combined
+CENTROID_MAX_RADIUS_PER = 0.05 # Percentage of width two centroids must be within to be combined
 
 # --------- UTILITY METHODS --------- 
 
@@ -42,14 +42,6 @@ def kill_execution(errormsg, videohandle=None, spin=True):
         videohandle.release()
     cv2.destroyAllWindows()
     sys.exit(1)
-
-# Function passed to frame trackbar
-def trackbar_update(val):
-    global current_frame 
-    current_frame = val
-    f = drawn_frames[current_frame].copy()
-    cv2.putText(f, "<Playback Mode>", (10, 30), FONT, 1, (0, 0, 0), 2)
-    cv2.imshow(WINDOW, f)
 
 # Converts units from pixels to given units
 def convert_units(pix, pix_dim, real_dim):
@@ -118,7 +110,7 @@ while True:
     # Convert frame to gray colorspace
     framegray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
     # Apply a threshold filter
-    ret, threshold = cv2.threshold(framegray, 200, 255, 0)
+    ret, threshold = cv2.threshold(framegray, 210, 255, 0)
     # Find and draw contours using cv2 simple chain approximation
     contours, hierarchy = cv2.findContours(threshold, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
     cv2.drawContours(frame, contours, -1, (0, 255, 0), 3)
@@ -182,6 +174,11 @@ while True:
                 raw_data[min_i]['Y'].append(c['Y'])
                 pos_data["objects"][min_i]['X'].append(convert_units(c['X'], width, args.get("real_width", width)))
                 pos_data["objects"][min_i]['Y'].append(convert_units(c['Y'], height, args.get("real_height", height)))
+        # Fill in any failed tracks for an object with -1 x/y
+        '''for obj in raw_data:
+            if len(obj['X']) < frame_num:
+                obj['X'].append(-1)
+                obj['Y'].append(-1)'''
 
     # Draw resulting centroids
     for i in range(len(raw_data)):
@@ -222,6 +219,8 @@ vs.release()
 logging.info("Releasing video write stream...")
 vw.release()
 logging.info("Processing complete.")
+
+logging.info("Position Data Info: ( objects: {0}, xlen: {1}, ylen: {2} )".format(len(pos_data['objects']), len(pos_data['objects'][0]['X']), len(pos_data['objects'][0]['Y'])))
 
 # Saving position data to pos_data.json
 pos_path = list(os.path.split(args['path']))

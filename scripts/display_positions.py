@@ -35,9 +35,12 @@ with open(args['path']) as fp:
     canvas = data['canvas']
     frames = [{ 'X': [], 'Y': [] } for i in range(len(objects[0]['X']))]
     for obj in objects:
-        for frame in range(len(obj['X'])):
-            frames[frame]['X'].append(obj['X'][frame])
-            frames[frame]['Y'].append(obj['Y'][frame])
+        for frame in range(len(min([obj['X'], obj['Y']]))):
+            try:
+                frames[frame]['X'].append(obj['X'][frame])
+                frames[frame]['Y'].append(obj['Y'][frame])
+            except:
+                print(frame)
 
 # Adding frame number to frames
 for i in range(len(frames)):
