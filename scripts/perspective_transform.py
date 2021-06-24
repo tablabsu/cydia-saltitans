@@ -56,7 +56,6 @@ logging.info("Searching for images...")
 if args.get("debug"):
     logging.getLogger().setLevel(logging.DEBUG)
 logging.debug("ARGS: {0}".format(args))
-logging.debug("Resize factor: {0}".format(RESIZE_FACTOR))
 
 # Checking that given path exists and is a folder
 if not os.path.exists(args['path']) or not os.path.isdir(args['path']):
@@ -104,7 +103,7 @@ while True:
                 image = cv2.warpPerspective(image, matrix, (width, height))
                 image = cv2.resize(image, (width, height))
                 cv2.imwrite(os.path.join(args['path'], "transformed", im), image)
-                cv2.putText(image, "Processing image {0} out of {1}".format(i + 1, len(im_files)), (0, int(width*RESIZE_FACTOR) - 10), FONT, 1, (0, 0, 255), 2)
+                cv2.putText(image, "Processing image {0} out of {1}".format(i + 1, len(im_files)), (0, height - 10), FONT, 1, (0, 0, 255), 2)
                 cv2.imshow(WINDOW, image)
                 key = cv2.waitKey(1) & 0xFF
                 if key == ord("q"):

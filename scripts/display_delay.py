@@ -40,9 +40,11 @@ if not os.path.split(args["path"])[-1].endswith(".json"):
 # Loading position data from file
 logging.info("Loading position data...")
 objects = []
+canvas = {}
 with open(args['path']) as fp:
     data = json.load(fp)
     objects = data['objects']
+    canvas = data['canvas']
 
 obj_i = []
 if args['objects']:
@@ -73,7 +75,8 @@ for o in obj_i:
 # Setting up plots
 logging.info("Setting up plots...")
 fig, ax = plt.subplots()
-ax.set_title("Delay Distribution Histogram")
+fig.suptitle("Delay Distribution Histogram")
+ax.set_title("Motion threshold: {0} {1}".format(threshold, canvas['units']))
 ax.set_xlabel("Delay (frames)")
 ax.set_ylabel("Frequency")
 bin_factor = 1

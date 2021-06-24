@@ -105,7 +105,7 @@ while True:
 
     # Create VideoWriter if not created already
     if not vw:
-        vw = cv2.VideoWriter('track-output.mp4', fourcc, 1, (width, height))
+        vw = cv2.VideoWriter('track-output.mp4', fourcc, int(frame_total / 60), (width, height))
 
     # Convert frame to gray colorspace
     framegray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
