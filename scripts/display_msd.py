@@ -12,7 +12,7 @@ def dist(x1, y1, x2, y2):
 # -----------------------------------
 
 # Setting up argument parser
-parser = argparse.ArgumentParser(description="Display mean-squared displacemnt (MSD) plots from position data files")
+parser = argparse.ArgumentParser(description="Display mean-squared displacement (MSD) plots from position data files")
 parser.add_argument("path", help="Path to file containing position data")
 parser.add_argument("-d", "--debug", action="store_true", help="Show debug information")
 args = vars(parser.parse_args())

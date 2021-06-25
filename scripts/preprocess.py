@@ -9,7 +9,7 @@ import cv2
 IMAGE_PREFIX = "Image"
 
 # Setting up argument parser
-parser = argparse.ArgumentParser(description="Preprocess videos for tracking using Fiji.")
+parser = argparse.ArgumentParser(description="Preprocess videos for tracking using OpenCV to modify frames and stitch into video.")
 parser.add_argument("path", help="Path to image frames")
 parser.add_argument("-nfx", "--nofx", action="store_true", help="Disable filtering video, just dump raw frames")
 parser.add_argument("-d", "--debug", action="store_true", help="Show debug information")
