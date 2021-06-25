@@ -122,7 +122,7 @@ while True:
                 elapsed = sum(times)
                 if i % 4 == 0:
                     est_total = (sum(times) / len(times)) * (len(im_files) - i) + elapsed
-                est_str = "{0}:{1} elapsed of {2}:{3} sec".format(str(math.floor(elapsed / 60)).zfill(2), str(math.floor(elapsed % 60)).zfill(2), str(math.floor(est_total / 60)).zfill(2), str(math.floor(est_total % 60)).zfill(2))
+                est_str = "{0}:{1} elapsed of {2}:{3}".format(str(math.floor(elapsed / 60)).zfill(2), str(math.floor(elapsed % 60)).zfill(2), str(math.floor(est_total / 60)).zfill(2), str(math.floor(est_total % 60)).zfill(2))
                 cv2.putText(image, est_str, (0, height - 50), FONT, 1, (0, 0, 255), 2)
 
                 # Showing processed image

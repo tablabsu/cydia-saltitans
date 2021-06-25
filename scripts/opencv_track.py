@@ -1,6 +1,6 @@
 import cv2
 import numpy as np
-import sys, os, argparse, logging, math, json
+import sys, os, argparse, logging, math, json, time
 
 WINDOW = 'Contour and Centroid Calculation - OpenCV'
 WINDOW_SIZE = (1500, 1100)
@@ -78,6 +78,8 @@ if not os.path.split(args['path'])[-1].endswith(".avi") and not os.path.split(ar
 
 pos_data = {"objects": [], "canvas": {}}
 raw_data = []
+times = []
+est_total = 0
 quit = False
 fourcc = cv2.VideoWriter_fourcc(*'mp4v')
 vw = None
@@ -91,6 +93,9 @@ while True:
     if not ret:
         logging.info("Video stream ended...")
         break
+    
+    # Start timer
+    start = time.time()
 
     # Grab frame number and total frames
     frame_num = int(vs.get(cv2.CAP_PROP_POS_FRAMES))
@@ -187,13 +192,20 @@ while True:
         cv2.circle(frame, (x, y), 5, (255, 0, 0), -1)
         cv2.putText(frame, "object {0}".format(i), (x - 50, y - 50), FONT, 1, (255, 0, 0), 2)
 
-    cp_frame = frame.copy()
-    cv2.putText(cp_frame, "Frame {0} of {1}".format(frame_num, frame_total), (0, height - 10), FONT, 1, (0, 0, 255), 2)
-    vw.write(cp_frame)
+    # Label frame, write to video output
+    cv2.putText(frame, "Frame {0} of {1}".format(frame_num, frame_total), (0, height - 10), FONT, 1, (0, 0, 255), 2)
+    vw.write(frame)
+    
+    # Estimating time to process remaining frames
+    end = time.time()
+    times.append(end - start)
+    elapsed = sum(times)
+    est_total = (sum(times) / len(times)) * (frame_total - frame_num) + elapsed
+    est_str = "{0}:{1} elapsed of {2}:{3}".format(str(math.floor(elapsed / 60)).zfill(2), str(math.floor(elapsed % 60)).zfill(2), str(math.floor(est_total / 60)).zfill(2), str(math.floor(est_total % 60)).zfill(2))
+    cv2.putText(frame, est_str, (0, height - 50), FONT, 1, (0, 0, 255), 2)
     
     # Writing frame number
     cv2.putText(frame, "<Processing Mode>", (10, 30), FONT, 1, (0, 0, 0), 2)
-    cv2.putText(frame, "Processing frame {0} of {1}".format(frame_num, frame_total), (0, height - 10), FONT, 1, (0, 0, 255), 2)
     cv2.imshow(WINDOW, frame)
 
     # Checking if a key was pressed
