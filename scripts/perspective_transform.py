@@ -1,7 +1,7 @@
 #! python3
 import cv2
 import numpy as np
-import sys, os, argparse, logging
+import sys, os, argparse, logging, time, math
 
 IMAGE_ENDINGS = ("jpg", "bmp", "jpeg", "png")
 IMAGE_PREFIX = "Image"
@@ -77,11 +77,14 @@ if len(im_files) == 0:
 image = cv2.imread(os.path.join(args['path'], im_files[0]))
 coords = []    
 
+# Create OpenCV window, register function to handle mouse clicks
 cv2.namedWindow(WINDOW, cv2.WINDOW_NORMAL)
 cv2.resizeWindow(WINDOW, WINDOW_SIZE[0], WINDOW_SIZE[1])
 cv2.setMouseCallback(WINDOW, click_points, coords)
+
 while True:
     cv2.imshow(WINDOW, image)
+    # Wait for either 'r' or 'p' key
     key = cv2.waitKey(1) & 0xFF
     if key == ord("r"):
         # Reset coordinates on R key
@@ -90,21 +93,42 @@ while True:
         image = cv2.imread(os.path.join(args['path'], im_files[0]))
         cv2.putText(image, "ROI reset.", (0, height - 10), FONT, 1, (0, 0, 255), 2)
     elif key == ord("p"):
-        # Process rest of frames
+        # Process image frames
         if len(coords) == 4:
             if not os.path.exists(os.path.join(args['path'], "transformed")):
                 os.mkdir(os.path.join(args['path'], "transformed"))
-            for (i, im) in enumerate(im_files):
+            times = []
+            est_total = 0
+            for i, im in enumerate(im_files):
+                # Start time for processing frame
+                start = time.time()
                 image = cv2.imread(os.path.join(args['path'], im))
                 height, width, channels = image.shape
                 image_coords = np.float32([[0, 0], [0, height], [width, 0], [width, height]])
                 transform_coords = np.float32(order_points(coords))
+                
+                # Create transform matrix and apply to image
                 matrix = cv2.getPerspectiveTransform(transform_coords, image_coords)
                 image = cv2.warpPerspective(image, matrix, (width, height))
                 image = cv2.resize(image, (width, height))
+
+                # Writing transformed image to transformed/
                 cv2.imwrite(os.path.join(args['path'], "transformed", im), image)
                 cv2.putText(image, "Processing image {0} out of {1}".format(i + 1, len(im_files)), (0, height - 10), FONT, 1, (0, 0, 255), 2)
+                
+                # Estimating time to process
+                end = time.time()
+                times.append(end - start)
+                elapsed = sum(times)
+                if i % 4 == 0:
+                    est_total = (sum(times) / len(times)) * (len(im_files) - i) + elapsed
+                est_str = "{0}:{1} elapsed of {2}:{3} sec".format(str(math.floor(elapsed / 60)).zfill(2), str(math.floor(elapsed % 60)).zfill(2), str(math.floor(est_total / 60)).zfill(2), str(math.floor(est_total % 60)).zfill(2))
+                cv2.putText(image, est_str, (0, height - 50), FONT, 1, (0, 0, 255), 2)
+
+                # Showing processed image
                 cv2.imshow(WINDOW, image)
+
+                # Checking if user quitting
                 key = cv2.waitKey(1) & 0xFF
                 if key == ord("q"):
                     logging.info("Stopping processing...")
@@ -113,6 +137,7 @@ while True:
                     cv2.putText(image, "Processing stopped.", (0, height - 5), FONT, 1, (0, 0, 255), 2)
                     cv2.imshow(WINDOW, image)
                     break
+            # Display original image when completed
             image = cv2.imread(os.path.join(args['path'], im_files[0]))
             cv2.putText(image, "Processing complete.", (0, height - 10), FONT, 1, (0, 0, 255), 2)
     elif key == ord("q"):

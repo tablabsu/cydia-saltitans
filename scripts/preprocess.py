@@ -1,5 +1,5 @@
 #! python3
-import sys, os, argparse, logging
+import sys, os, argparse, logging, time, math
 import imageio
 import numpy as np
 import cv2
@@ -47,9 +47,12 @@ def list_frames(frames_path):
 
 # Read frame files, apply preprocessing filters
 def process_frames(frames, frames_path, video):
-    for frame in frames:
+    times = []
+    est_total = 0
+    for i, frame in enumerate(frames):
+        start = time.time()
         logging.info("Processing frame {0}".format(strip_frame_number(IMAGE_PREFIX, frame)))
-        
+
         # Read frame file
         f = cv2.imread(os.path.join(frames_path, frame))
 
@@ -74,6 +77,13 @@ def process_frames(frames, frames_path, video):
 
         # Write frame to video
         video.write(f)
+
+        end = time.time()
+        times.append(end - start)
+        elapsed = sum(times)
+        if i % 4 == 0:
+            est_total = (sum(times) / len(times)) * (len(frames) - i) + elapsed
+        logging.info("Frame took {0} seconds to process, approx. {1}:{2} remaining.".format(round(end - start, 2), str(math.floor(est_total / 60)).zfill(2), str(math.floor(est_total % 60)).zfill(2)))
 
 if __name__ == "__main__":
     try:            
