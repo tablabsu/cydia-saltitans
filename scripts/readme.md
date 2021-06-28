@@ -145,14 +145,13 @@ optional arguments:
 
 - Displays an MSD plot (scaled to log base 10 in both axes) for the given position data. Units are pulled from the units specified in the position data file. The plot is displayed until the user closes the window or hits "Q", after which the program asks if they want to save the plot, which is then saved to `figure.png` in the same folder the script is run from.
 
-#### display_delay.py
+#### display_dists.py
 
 ```
-usage: display_delay.py [-h] [-t THRESHOLD] [-o OBJECTS] [-b BIN_FACTOR] [-d]
+usage: display_dists.py [-h] [-t THRESHOLD] [-o OBJECTS] [-b BIN_FACTOR] [-d]
                         path
 
-Display probability distribution of delays between jumps from json position
-data files
+Display probability distribution of delays between jumps and relative displacement between frames from json position data files
 
 positional arguments:
   path                  Path to file containing position data
@@ -173,7 +172,7 @@ optional arguments:
 
 ##### Notes:
 
-- Displays a delay distribution plot (histogram of delays between object movement). After the plot is displayed, the script waits until the window is closed or the user hits "Q". Then, the program asks if the user wants to save the plot, which ends up as `figure.png` in the same directory the script is run in.
-- The threshold for what is considered movement defaults to 0.1 in whichever units the position data file specifies, and can be overridden using the threshold argument.
+- Displays distribution plots of both delays and displacements (histogram of delays between object movement and relative displacements between frames). After each plot is displayed, the script waits until the window is closed or the user hits "Q". Then, the program asks if the user wants to save the plot, which ends up as `figure.png` in the same directory the script is run in.
+- The threshold for what is considered movement for delays defaults to 0.1 in whichever units the position data file specifies, and can be overridden using the threshold argument.
 - The objects to track defaults to all objects in the position data file, but can be overridden by specifying a comma-separated list of object numbers (i.e., `--objects 1,3,4` or `-o 2`).
 - The output plot defaults to setting the number of bins to the highest delay in the calculated delays, but using the bin factor argument that number can be modified. By specifying a bin factor of 0.5 with `--bin-factor 0.5` or `-b 0.5`, the number of bins is halved. By specifying a bin factor of 2.0 with `-b 2.0`, the number of bins is doubled.
