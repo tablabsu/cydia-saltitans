@@ -114,7 +114,7 @@ if input("View displacement plot? ").lower() in ('y', 'yes'):
     fig, ax = plt.subplots()
     #fig.suptitle("Displacement Distribution Histogram")
     ax.set_title("Displacement Distribution Histogram")
-    ax.set_xlabel("Displacement ({0})")
+    ax.set_xlabel("Displacement ({0})".format(canvas['units']))
     ax.set_ylabel("Frequency")
     bin_factor = 1
     if args['bin_factor']:

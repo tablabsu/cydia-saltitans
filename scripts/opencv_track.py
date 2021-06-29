@@ -19,8 +19,10 @@ def centroid_avg(cntrds):
     w_x = sum([i[0]['X']*i[1] for i in cntrds])
     w_y = sum([i[0]['Y']*i[1] for i in cntrds])
     areas = sum([i[1] for i in cntrds])
-    return ({'X': round(w_x / areas), 'Y': round(w_y / areas)}, areas)
-
+    if areas > 0:
+        return ({'X': round(w_x / areas), 'Y': round(w_y / areas)}, areas)
+    else:
+        return ({'X': cntrds[0][0]['X'], 'Y': cntrds[0][0]['Y']}, 0)
 # Returns true if c is within factor percent of image borders
 def centroid_border(c, factor, shape):
     height, width, _ = shape
@@ -115,10 +117,18 @@ while True:
     # Convert frame to gray colorspace
     framegray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
     # Apply a threshold filter
-    ret, threshold = cv2.threshold(framegray, 210, 255, 0)
+    #ret, threshold = cv2.threshold(framegray, 128, 255, 0)
+    #threshold = cv2.adaptiveThreshold(framegray, 255, cv2.ADAPTIVE_THRESH_MEAN_C, cv2.THRESH_BINARY, 11, 2)
+    ret, threshold = cv2.threshold(framegray, 128, 255, cv2.THRESH_TRUNC+cv2.THRESH_OTSU)
+    ret, threshold = cv2.threshold(framegray, 128, 255, cv2.THRESH_BINARY)
     # Find and draw contours using cv2 simple chain approximation
     contours, hierarchy = cv2.findContours(threshold, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
     cv2.drawContours(frame, contours, -1, (0, 255, 0), 3)
+
+    # DEBUG 
+    if frame_num == 1:
+        cv2.namedWindow("THRESHOLD DEBUG", cv2.WINDOW_NORMAL)
+        cv2.imshow("THRESHOLD DEBUG", threshold)
 
     # Calculate centroids
     centroids = []
