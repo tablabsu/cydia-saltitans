@@ -119,8 +119,8 @@ while True:
     # Apply a threshold filter
     #ret, threshold = cv2.threshold(framegray, 128, 255, 0)
     #threshold = cv2.adaptiveThreshold(framegray, 255, cv2.ADAPTIVE_THRESH_MEAN_C, cv2.THRESH_BINARY, 11, 2)
-    ret, threshold = cv2.threshold(framegray, 128, 255, cv2.THRESH_TRUNC+cv2.THRESH_OTSU)
-    ret, threshold = cv2.threshold(framegray, 128, 255, cv2.THRESH_BINARY)
+    #ret, threshold = cv2.threshold(framegray, 128, 255, cv2.THRESH_TRUNC+cv2.THRESH_OTSU)
+    ret, threshold = cv2.threshold(framegray, 160, 255, cv2.THRESH_BINARY)
     # Find and draw contours using cv2 simple chain approximation
     contours, hierarchy = cv2.findContours(threshold, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
     cv2.drawContours(frame, contours, -1, (0, 255, 0), 3)

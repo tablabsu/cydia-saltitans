@@ -14,7 +14,7 @@ def dist(x1, y1, x2, y2):
 
 # Setting up argument parser
 parser = argparse.ArgumentParser(description="Display probability distribution of delays between jumps and relative displacement between frames from json position data files")
-parser.add_argument("path", help="Path to file containing position data")
+parser.add_argument("path", nargs='+', help="Path to file containing position data")
 parser.add_argument("-t", "--threshold", type=float, help="Threshold of activity, defaults to {0}".format(DEFAULT_THRESHOLD))
 parser.add_argument("-o", "--objects", help="Index of objects to calculate delays for, accepts comma-separated list of indices")
 parser.add_argument("-b", "--bin-factor", type=float, help="Bins are set to show every value in input data, this accepts a multiplier to increase or reduce that number (defaults to 1)")
@@ -29,60 +29,79 @@ if args.get("debug"):
     logging.getLogger().setLevel(logging.DEBUG)
 logging.debug("ARGS: {0}".format(args))
 
-# Check that file at path exists and ends in .json
-if not os.path.exists(args["path"]):
-    logging.warning("Given path does not exist! Exiting...")
-    sys.exit(1)
-if not os.path.split(args["path"])[-1].endswith(".json"):
-    logging.warning("Given path does not point to a .json file! Exiting...")
-    sys.exit(1)
+total_delays = []
+total_disps = []
+# Iterate through each given path
+for p_num, path in enumerate(args['path']):
 
-# Loading position data from file
-logging.info("Loading position data...")
-objects = []
-canvas = {}
-with open(args['path']) as fp:
-    data = json.load(fp)
-    objects = data['objects']
-    canvas = data['canvas']
+    # Check that file at path exists and ends in .json
+    if not os.path.exists(path):
+        logging.warning("Given path does not exist! Exiting...")
+        sys.exit(1)
+    if not os.path.split(path)[-1].endswith(".json"):
+        logging.warning("Given path does not point to a .json file! Exiting...")
+        sys.exit(1)
 
-obj_i = []
-if args['objects']:
-    obj_i = [int(i) for i in args['objects'].split(",")]
-else:
-    obj_i = range(len(objects))
+    # Loading position data from file
+    logging.info("Loading position data...")
+    objects = []
+    canvas = {}
+    with open(path) as fp:
+        data = json.load(fp)
+        objects = data['objects']
+        canvas = data['canvas']
 
-# Calculating delays
-logging.info("Calculating delays...")
-threshold = args['threshold']
-if threshold is None:
-    threshold = DEFAULT_THRESHOLD
-obj_delays = []
-for o in obj_i:
-    x = objects[o]['X']
-    y = objects[o]['Y']
-    d = 1
-    delays = []
-    for i in range(len(x) - 1):
-        disp = dist(x[i], y[i], x[i+1], y[i+1])
-        if disp < threshold:
-            d += 1
+    obj_i = []
+    if args['objects']:
+        obj_i = [int(i) for i in args['objects'].split(",")]
+    else:
+        obj_i = range(len(objects))
+
+    # Calculating delays
+    logging.info("Calculating delays...")
+    threshold = args['threshold']
+    if threshold is None:
+        threshold = DEFAULT_THRESHOLD
+    obj_delays = []
+    for o in obj_i:
+        x = objects[o]['X']
+        y = objects[o]['Y']
+        d = 1
+        delays = []
+        for i in range(len(x) - 1):
+            disp = dist(x[i], y[i], x[i+1], y[i+1])
+            if disp < threshold:
+                d += 1
+            else:
+                delays.append(d)
+                d = 1
+        obj_delays.append(delays)
+    
+    # Calculating relative displacements
+    obj_disps = []
+    for o in obj_i:
+        x = objects[o]['X']
+        y = objects[o]['Y']
+        disps = []
+        for i in range(len(x) - 1):
+            disp = dist(x[i], y[i], x[i+1], y[i+1])
+            disps.append(disp)
+        obj_disps.append(disps)
+
+    # Combine delays and displacements into total delays and displacements
+    for i, o in enumerate(obj_delays):
+        if p_num == 0:
+            total_delays.append(o)
         else:
-            delays.append(d)
-            d = 1
-    obj_delays.append(delays)
+            total_delays[i].extend(o)
+    for i, o in enumerate(obj_disps):
+        if p_num == 0:
+            total_disps.append(o)
+        else:
+            total_disps[i].extend(o)
 
-# Calculating relative displacements
-obj_disps = []
-for o in obj_i:
-    x = objects[o]['X']
-    y = objects[o]['Y']
-    disps = []
-    for i in range(len(x) - 1):
-        disp = dist(x[i], y[i], x[i+1], y[i+1])
-        disps.append(disp)
-    obj_disps.append(disps)
-
+logging.debug("Total Delays: {0}".format(len(total_delays[0])))
+logging.debug("Total Displacements: {0}".format(len(total_disps[0])))
 logging.info("Setting up plots...")
 
 # Setting up delay plot
@@ -92,6 +111,7 @@ if input("View delay plot? ").lower() in ('y', 'yes'):
     ax.set_title("Motion threshold: {0} {1}".format(threshold, canvas['units']))
     ax.set_xlabel("Delay (frames)")
     ax.set_ylabel("Frequency")
+    ax.set_xlim(0, 200)
     bin_factor = 1
     if args['bin_factor']:
         bin_factor = args['bin_factor']
@@ -107,7 +127,7 @@ if input("View delay plot? ").lower() in ('y', 'yes'):
 # Saving figure
 if input("Save figure? ").lower() in ('y', 'yes'):
     logging.info("Saving figure...")
-    fig.savefig("figure")
+    fig.savefig("figure-delay")
 
 # Setting up displacement plot
 if input("View displacement plot? ").lower() in ('y', 'yes'):
@@ -128,7 +148,7 @@ if input("View displacement plot? ").lower() in ('y', 'yes'):
 # Saving figure
 if input("Save figure? ").lower() in ('y', 'yes'):
     logging.info("Saving figure...")
-    fig.savefig("figure")
+    fig.savefig("figure-displacement")
 
 
 
