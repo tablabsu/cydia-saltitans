@@ -57,35 +57,28 @@ for p_num, path in enumerate(args['path']):
     else:
         obj_i = range(len(objects))
 
-    # Calculating delays
+    # Calculating delays and associated displacements
     logging.info("Calculating delays...")
     threshold = args['threshold']
     if threshold is None:
         threshold = DEFAULT_THRESHOLD
     obj_delays = []
+    obj_disps = []
     for o in obj_i:
         x = objects[o]['X']
         y = objects[o]['Y']
         d = 1
         delays = []
+        disps = []
         for i in range(len(x) - 1):
             disp = dist(x[i], y[i], x[i+1], y[i+1])
             if disp < threshold:
                 d += 1
             else:
                 delays.append(d)
+                disps.append(disp)
                 d = 1
         obj_delays.append(delays)
-    
-    # Calculating relative displacements
-    obj_disps = []
-    for o in obj_i:
-        x = objects[o]['X']
-        y = objects[o]['Y']
-        disps = []
-        for i in range(len(x) - 1):
-            disp = dist(x[i], y[i], x[i+1], y[i+1])
-            disps.append(disp)
         obj_disps.append(disps)
 
     # Combine delays and displacements into total delays and displacements
@@ -110,8 +103,8 @@ if input("View delay plot? ").lower() in ('y', 'yes'):
     fig.suptitle("Delay Distribution Histogram")
     ax.set_title("Motion threshold: {0} {1}".format(threshold, canvas['units']))
     ax.set_xlabel("Delay (frames)")
-    ax.set_ylabel("Frequency")
-    ax.set_xlim(0, 200)
+    ax.set_ylabel("Log of Frequency")
+    ax.set_xlim(0, 25)
     bin_factor = 1
     if args['bin_factor']:
         bin_factor = args['bin_factor']
@@ -122,12 +115,13 @@ if input("View delay plot? ").lower() in ('y', 'yes'):
         plt.hist(d, bins=bins, label="Object {0}".format(i))
     if len(obj_delays) > 1:
         plt.legend()
+    plt.yscale('log')
     plt.show()
 
-# Saving figure
-if input("Save figure? ").lower() in ('y', 'yes'):
-    logging.info("Saving figure...")
-    fig.savefig("figure-delay")
+    # Saving figure
+    if input("Save figure? ").lower() in ('y', 'yes'):
+        logging.info("Saving figure...")
+        fig.savefig("figure-delay")
 
 # Setting up displacement plot
 if input("View displacement plot? ").lower() in ('y', 'yes'):
@@ -136,6 +130,7 @@ if input("View displacement plot? ").lower() in ('y', 'yes'):
     ax.set_title("Displacement Distribution Histogram")
     ax.set_xlabel("Displacement ({0})".format(canvas['units']))
     ax.set_ylabel("Frequency")
+    ax.set_xlim(0, 1.0)
     bin_factor = 1
     if args['bin_factor']:
         bin_factor = args['bin_factor']
@@ -145,10 +140,30 @@ if input("View displacement plot? ").lower() in ('y', 'yes'):
         plt.legend()
     plt.show()
 
-# Saving figure
-if input("Save figure? ").lower() in ('y', 'yes'):
-    logging.info("Saving figure...")
-    fig.savefig("figure-displacement")
+    # Saving figure
+    if input("Save figure? ").lower() in ('y', 'yes'):
+        logging.info("Saving figure...")
+        fig.savefig("figure-displacement")
+
+# Setting up delay vs. displacement plot
+if input("View delay vs. displacement plot? ").lower() in ('y', 'yes'):
+    fig, ax = plt.subplots()
+    ax.set_title("Delay vs. Displacement")
+    ax.set_xlabel("Delay (frames)")
+    ax.set_ylabel("Displacement ({0})".format(canvas['units']))
+    ax.set_xlim(0, 200)
+    ax.set_ylim(0, 1.0)
+    for i in range(len(obj_disps)):
+        plt.scatter(obj_delays[i], obj_disps[i])
+    if len(obj_disps) > 1:
+        plt.legend()
+    plt.show()
+
+    # Saving figure
+    if input("Save figure? ").lower() in ('y', 'yes'):
+        logging.info("Saving figure...")
+        fig.savefig("figure-delay-displacement")
+
 
 
 
