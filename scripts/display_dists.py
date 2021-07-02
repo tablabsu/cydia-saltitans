@@ -1,5 +1,6 @@
 #! python3
 import sys, os, argparse, logging, json, math
+from random import random
 from matplotlib import pyplot as plt
 
 DEFAULT_THRESHOLD = 0.1
@@ -51,6 +52,7 @@ for p_num, path in enumerate(args['path']):
         objects = data['objects']
         canvas = data['canvas']
 
+    # Filtering out specified objects
     obj_i = []
     if args['objects']:
         obj_i = [int(i) for i in args['objects'].split(",")]
@@ -112,7 +114,7 @@ if input("View delay plot? ").lower() in ('y', 'yes'):
         bins = 1
         if len(d) > 0:
             bins = int(max(d) * bin_factor)
-        plt.hist(d, bins=bins, label="Object {0}".format(i))
+        plt.hist(d, bins=bins, color=(random(), random(), random()), label="Object {0}".format(i))
     if len(obj_delays) > 1:
         plt.legend()
     plt.yscale('log')
@@ -135,7 +137,7 @@ if input("View displacement plot? ").lower() in ('y', 'yes'):
     if args['bin_factor']:
         bin_factor = args['bin_factor']
     for i, d in enumerate(obj_disps):
-        plt.hist(d, bins=40, label="Object {0}".format(i))
+        plt.hist(d, bins=40, color=(random(), random(), random()), label="Object {0}".format(i))
     if len(obj_disps) > 1:
         plt.legend()
     plt.show()
@@ -154,7 +156,7 @@ if input("View delay vs. displacement plot? ").lower() in ('y', 'yes'):
     ax.set_xlim(0, 200)
     ax.set_ylim(0, 1.0)
     for i in range(len(obj_disps)):
-        plt.scatter(obj_delays[i], obj_disps[i])
+        plt.scatter(obj_delays[i], obj_disps[i], color=(random(), random(), random()))
     if len(obj_disps) > 1:
         plt.legend()
     plt.show()
