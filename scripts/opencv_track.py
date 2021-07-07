@@ -7,6 +7,7 @@ WINDOW_SIZE = (1500, 1100)
 TRACKBAR_NAME = "Frame"
 FONT = cv2.FONT_HERSHEY_SIMPLEX 
 CENTROID_MAX_RADIUS_PER = 0.05 # Percentage of width two centroids must be within to be combined
+FOURCC = cv2.VideoWriter_fourcc(*'mp4v')
 
 # --------- UTILITY METHODS --------- 
 
@@ -83,7 +84,6 @@ raw_data = []
 times = []
 est_total = 0
 quit = False
-fourcc = cv2.VideoWriter_fourcc(*'mp4v')
 vw = None
 vs = cv2.VideoCapture(args['path'])
 cv2.namedWindow(WINDOW, cv2.WINDOW_NORMAL)
@@ -112,7 +112,7 @@ while True:
 
     # Create VideoWriter if not created already
     if not vw:
-        vw = cv2.VideoWriter('track-output.mp4', fourcc, int(frame_total / 60), (width, height))
+        vw = cv2.VideoWriter('track-output.mp4', FOURCC, int(frame_total / 60), (width, height))
 
     # Convert frame to gray colorspace
     framegray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
@@ -120,7 +120,7 @@ while True:
     #ret, threshold = cv2.threshold(framegray, 128, 255, 0)
     #threshold = cv2.adaptiveThreshold(framegray, 255, cv2.ADAPTIVE_THRESH_MEAN_C, cv2.THRESH_BINARY, 11, 2)
     #ret, threshold = cv2.threshold(framegray, 128, 255, cv2.THRESH_TRUNC+cv2.THRESH_OTSU)
-    ret, threshold = cv2.threshold(framegray, 160, 255, cv2.THRESH_BINARY)
+    ret, threshold = cv2.threshold(framegray, 128, 255, cv2.THRESH_BINARY)
     # Find and draw contours using cv2 simple chain approximation
     contours, hierarchy = cv2.findContours(threshold, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
     cv2.drawContours(frame, contours, -1, (0, 255, 0), 3)

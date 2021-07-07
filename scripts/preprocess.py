@@ -1,9 +1,7 @@
 #! python3
 import sys, os, argparse, logging, time, math
-import imageio
 import numpy as np
 import cv2
-#from scikit import io, filters, exposure
 
 # Script constants here
 IMAGE_PREFIX = "Image"
