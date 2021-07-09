@@ -2,8 +2,10 @@
 import sys, os, argparse, logging, json, math
 from random import random
 from matplotlib import pyplot as plt
+import numpy as np
 
 DEFAULT_THRESHOLD = 0.1
+MINIMUM_DELAY_FRAMES = 5
 
 # --------- UTILITY METHODS --------- 
 
@@ -77,9 +79,10 @@ for p_num, path in enumerate(args['path']):
             if disp < threshold:
                 d += 1
             else:
-                delays.append(d)
-                disps.append(disp)
-                d = 1
+                if d >= MINIMUM_DELAY_FRAMES:
+                    delays.append(d)
+                    disps.append(disp)
+                    d = 1
         obj_delays.append(delays)
         obj_disps.append(disps)
 
@@ -106,7 +109,7 @@ if input("View delay plot? ").lower() in ('y', 'yes'):
     ax.set_title("Motion threshold: {0} {1}".format(threshold, canvas['units']))
     ax.set_xlabel("Delay (frames)")
     ax.set_ylabel("Log of Frequency")
-    ax.set_xlim(0, 25)
+    ax.set_xlim(MINIMUM_DELAY_FRAMES, 25)
     bin_factor = 1
     if args['bin_factor']:
         bin_factor = args['bin_factor']
@@ -117,7 +120,7 @@ if input("View delay plot? ").lower() in ('y', 'yes'):
         plt.hist(d, bins=bins, color=(random(), random(), random()), label="Object {0}".format(i))
     if len(obj_delays) > 1:
         plt.legend()
-    plt.yscale('log')
+    #plt.yscale('log')
     plt.show()
 
     # Saving figure
@@ -132,7 +135,10 @@ if input("View displacement plot? ").lower() in ('y', 'yes'):
     ax.set_title("Displacement Distribution Histogram")
     ax.set_xlabel("Displacement ({0})".format(canvas['units']))
     ax.set_ylabel("Frequency")
-    ax.set_xlim(0, 1.0)
+    min_disp = min([min(d) for d in obj_disps])
+    min_disp = float('%.1f'%(min_disp))
+    ax.set_xlim(min_disp, 1.0)
+    #ax.set_xticks(np.arange(min_disp, 1.0, 0.1))
     bin_factor = 1
     if args['bin_factor']:
         bin_factor = args['bin_factor']
