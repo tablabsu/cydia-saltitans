@@ -92,6 +92,8 @@ while True:
     if not ret:
         logging.info("Video stream ended...")
         break
+# Print bell character upon completion
+print('\a')
 vs.release()
 vw.release()
 cv2.destroyAllWindows()

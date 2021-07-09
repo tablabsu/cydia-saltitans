@@ -126,9 +126,9 @@ while True:
     cv2.drawContours(frame, contours, -1, (0, 255, 0), 3)
 
     # DEBUG 
-    if frame_num == 1:
-        cv2.namedWindow("THRESHOLD DEBUG", cv2.WINDOW_NORMAL)
-        cv2.imshow("THRESHOLD DEBUG", threshold)
+    #if frame_num == 1:
+        #cv2.namedWindow("THRESHOLD DEBUG", cv2.WINDOW_NORMAL)
+        #cv2.imshow("THRESHOLD DEBUG", threshold)
 
     # Calculate centroids
     centroids = []
@@ -253,4 +253,7 @@ with open(pos_path, "w+") as fp:
     json.dump(pos_data, fp)
 logging.info("Position data saved.")
 logging.info("Quitting...")
+
+# Print bell character upon completion
+print('\a')
 cv2.destroyAllWindows()

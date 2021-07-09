@@ -104,16 +104,26 @@ while in_progress:
     elif key == ord('p'):
         # Process frames
         if len(coords) == 4:
-            frame = first_frame.copy()
+            #frame = first_frame.copy()
+            vs.set(cv2.CAP_PROP_POS_FRAMES, 0)
             times = []
             est_total = 0
             while True:
+                
+                # Read new frame
+                ret, frame = vs.read()
+                if not ret:
+                    logging.info("Video stream ended...")
+                    in_progress = False
+                    break
                 # Start timer
                 start = time.time()
 
                 # Grab frame number and frame dims
                 frame_num = int(vs.get(cv2.CAP_PROP_POS_FRAMES))
                 height, width, _ = frame.shape
+
+                logging.info("Processing frame {0}...".format(frame_num))
                 
                 # Set up coords for transformation
                 image_coords = np.float32([[0, 0], [0, height], [width, 0], [width, height]])
@@ -148,17 +158,12 @@ while in_progress:
                     quit = True
                     break
 
-                # Read new frame
-                ret, frame = vs.read()
-                if not ret:
-                    logging.info("Video stream ended...")
-                    in_progress = False
-                    break
-
     elif key == ord('q') or quit:
         # Quit program on Q key
         logging.info("Quitting...")
         break
+# Print bell character upon completion
+print('\a')
 vs.release()
 vw.release()
 cv2.destroyAllWindows()
