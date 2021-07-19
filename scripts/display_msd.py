@@ -12,10 +12,13 @@ def dist(x1, y1, x2, y2):
 
 # -----------------------------------
 
+DEFAULT_FPS = 1
+
 # Setting up argument parser
 parser = argparse.ArgumentParser(description="Display mean-squared displacement (MSD) plots from position data files")
 parser.add_argument("path", nargs='+', help="Path to file containing position data")
 parser.add_argument("-d", "--debug", action="store_true", help="Show debug information")
+parser.add_argument("-f", "--fps", type=int, help="FPS of input data")
 args = vars(parser.parse_args())
 
 # Setting up logger
@@ -26,46 +29,9 @@ if args.get("debug"):
     logging.getLogger().setLevel(logging.DEBUG)
 logging.debug("ARGS: {0}".format(args))
 
-'''# Check that file at path exists and ends in .json
-if not os.path.exists(args["path"]):
-    logging.warning("Given path does not exist! Exiting...")
-    sys.exit(1)
-if not os.path.split(args["path"])[-1].endswith(".json"):
-    logging.warning("Given path does not point to a .json file! Exiting...")
-    sys.exit(1)
-
-objects = []
-canvas = {}
-# Read position data from file
-logging.info("Reading position data...")
-with open(args['path']) as fp:
-    data = json.load(fp)
-    objects = data["objects"]
-    canvas = data['canvas']
-
-# Calculate MSD data from objects
-logging.info("Calculating MSD data...")
-objects_msd = []
-for obj in objects:
-    o = { 'tau': [], 'msd': [] }
-    tau = range(1, int(len(obj['X']) / 2))
-    for t in tau:
-        # Pull out X and Y coordinate lists
-        tau_x = obj['X']
-        tau_y = obj['Y']
-
-        # Calculate distance between points apart by interval tau, then square displacement
-        tau_dist = [dist(tau_x[i], tau_y[i], tau_x[i+t], tau_y[i+t]) for i in range(len(tau_x) - t)]
-        tau_dist = [math.pow(i, 2) for i in tau_dist]
-
-        # Average the displacement of those intervals
-        msd = sum(tau_dist) / len(tau_dist)
-        #msd = tau_dist
-
-        # Add to object's tau and msd list
-        o['tau'].append(t)
-        o['msd'].append(msd)
-    objects_msd.append(o)'''
+fps = DEFAULT_FPS
+if args['fps']:
+    fps = args['fps']
 
 # Calculate MSD data for each object in each file
 objects_msd = []
@@ -94,7 +60,7 @@ for path in args['path']:
         if len(objects_msd) < (i + 1):
             # 'New' object
             o = { 'tau': [], 'msd': [] }
-            tau = range(1, int(len(obj['X']) / 2))
+            tau = range(fps, int(len(obj['X']) / 2), fps)
             for t in tau:
                 # Pull out X and Y coordinate lists
                 tau_x = obj['X']
@@ -109,13 +75,13 @@ for path in args['path']:
                 msd = tau_dist
 
                 # Add to object's tau and msd list
-                o['tau'].append(t)
+                o['tau'].append(int(t / fps))
                 o['msd'].append(msd)
             objects_msd.append(o)
         else:
             # Object seen in previous file
             o = objects_msd[i]
-            tau = range(1, int(len(obj['X']) / 2))
+            tau = range(fps, int(len(obj['X']) / 2), fps)
             for t in tau:
                 # Pull out X and Y coordinate lists
                 tau_x = obj['X']
@@ -130,7 +96,7 @@ for path in args['path']:
                 msd = tau_dist
 
                 # Add to object's tau and msd list
-                o['tau'].append(t)
+                o['tau'].append(int(t / fps))
                 o['msd'].append(msd)
             objects_msd[i] = o
         
@@ -173,8 +139,9 @@ for i, obj in enumerate(objects_msd):
 plt.title("Log MSD over Log Tau")
 plt.xlabel("Log Tau")
 plt.ylabel("Log MSD ({0})".format(canvas['units'] + "^2"))
-if len(objects_msd) > 1:
-    plt.legend()
+#if len(objects_msd) > 1:
+#    plt.legend()
+plt.legend()
 plt.show()
 
 if input("Save figure? ").lower() in ('y', 'yes'):

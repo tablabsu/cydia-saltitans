@@ -10,6 +10,7 @@ ffmpeg -ss 0 -r 30 -i track-output.mp4 -frames:v 630 trimmed-track-output.mp4
 ffmpeg -i 2021-06-25-video1-track-output.mp4 -vf select="between(n\,2750\,3600),setpts=PTS-STARTPTS" 2021-06-25-vid
 eo1-track-output-2700-3600.mp4
 
+
 # Playing video at specified framerate by piping ffmpeg to ffplay
 
 ffmpeg -r 60 -i video1/video.mp4 -f yuv4mpegpipe - | ffplay -

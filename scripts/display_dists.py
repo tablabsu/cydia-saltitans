@@ -21,6 +21,7 @@ parser.add_argument("path", nargs='+', help="Path to file containing position da
 parser.add_argument("-t", "--threshold", type=float, help="Threshold of activity, defaults to {0}".format(DEFAULT_THRESHOLD))
 parser.add_argument("-o", "--objects", help="Index of objects to calculate delays for, accepts comma-separated list of indices")
 parser.add_argument("-b", "--bin-factor", type=float, help="Bins are set to show every value in input data, this accepts a multiplier to increase or reduce that number (defaults to 1)")
+parser.add_argument("-mdf", "--min-delay-frames", type=int, help="Minimum threshold for number of frames between delays to be plotted")
 parser.add_argument("-d", "--debug", action="store_true", help="Show debug information")
 args = vars(parser.parse_args())
 
@@ -31,6 +32,10 @@ logging.info("Starting plotting...")
 if args.get("debug"):
     logging.getLogger().setLevel(logging.DEBUG)
 logging.debug("ARGS: {0}".format(args))
+
+mdf = MINIMUM_DELAY_FRAMES
+if args['min_delay_frames']:
+    mdf = args['min_delay_frames']
 
 total_delays = []
 total_disps = []
@@ -79,7 +84,7 @@ for p_num, path in enumerate(args['path']):
             if disp < threshold:
                 d += 1
             else:
-                if d >= MINIMUM_DELAY_FRAMES:
+                if d >= mdf:
                     delays.append(d)
                     disps.append(disp)
                     d = 1
@@ -109,7 +114,7 @@ if input("View delay plot? ").lower() in ('y', 'yes'):
     ax.set_title("Motion threshold: {0} {1}".format(threshold, canvas['units']))
     ax.set_xlabel("Delay (frames)")
     ax.set_ylabel("Log of Frequency")
-    ax.set_xlim(MINIMUM_DELAY_FRAMES, 25)
+    ax.set_xlim(mdf, 25)
     bin_factor = 1
     if args['bin_factor']:
         bin_factor = args['bin_factor']
