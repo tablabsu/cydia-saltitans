@@ -12,13 +12,13 @@ def dist(x1, y1, x2, y2):
 
 # -----------------------------------
 
-DEFAULT_FPS = 1
-
 # Setting up argument parser
 parser = argparse.ArgumentParser(description="Display mean-squared displacement (MSD) plots from position data files")
 parser.add_argument("path", nargs='+', help="Path to file containing position data")
 parser.add_argument("-d", "--debug", action="store_true", help="Show debug information")
-parser.add_argument("-f", "--fps", type=int, help="FPS of input data")
+parser.add_argument("-tl", "--tau-limit", type=float, help="Limits plots (and fitting) to looking at MSD up to given tau value")
+parser.add_argument("-f", "--fps", type=int, help="FPS value of clip, used to keep tau in seconds scale")
+parser.add_argument("-nl", "--no-log", action="store_true", help="Disables log scaling for graph")
 args = vars(parser.parse_args())
 
 # Setting up logger
@@ -28,10 +28,6 @@ logging.info("Starting plotting...")
 if args.get("debug"):
     logging.getLogger().setLevel(logging.DEBUG)
 logging.debug("ARGS: {0}".format(args))
-
-fps = DEFAULT_FPS
-if args['fps']:
-    fps = args['fps']
 
 # Calculate MSD data for each object in each file
 objects_msd = []
@@ -60,7 +56,7 @@ for path in args['path']:
         if len(objects_msd) < (i + 1):
             # 'New' object
             o = { 'tau': [], 'msd': [] }
-            tau = range(fps, int(len(obj['X']) / 2), fps)
+            tau = range(1, int(len(obj['X']) / 2))
             for t in tau:
                 # Pull out X and Y coordinate lists
                 tau_x = obj['X']
@@ -75,13 +71,13 @@ for path in args['path']:
                 msd = tau_dist
 
                 # Add to object's tau and msd list
-                o['tau'].append(int(t / fps))
+                o['tau'].append(t)
                 o['msd'].append(msd)
             objects_msd.append(o)
         else:
             # Object seen in previous file
             o = objects_msd[i]
-            tau = range(fps, int(len(obj['X']) / 2), fps)
+            tau = range(1, int(len(obj['X']) / 2))
             for t in tau:
                 # Pull out X and Y coordinate lists
                 tau_x = obj['X']
@@ -96,7 +92,7 @@ for path in args['path']:
                 msd = tau_dist
 
                 # Add to object's tau and msd list
-                o['tau'].append(int(t / fps))
+                o['tau'].append(t)
                 o['msd'].append(msd)
             objects_msd[i] = o
         
@@ -122,10 +118,28 @@ for obj in objects_msd:
 logging.info("Setting up plots...")
 fig, ax = plt.subplots()
 for i, obj in enumerate(objects_msd):
-    # Calculate natural log of tau and msd
-    tau = [math.log(i, 10) if i != 0 else i for i in obj['tau']]
-    msd = [math.log(i, 10) if i != 0 else i for i in obj['msd']]
+    tau = obj['tau']
+    msd = obj['msd']
+    if args['fps']:
+        tau = [t * (1 / args['fps']) for t in tau]
+    if not args.get("no_log"):
+        # Calculate natural log of tau and msd
+        tau = [math.log(i, 10) if i != 0 else i for i in tau]
+        msd = [math.log(i, 10) if i != 0 else i for i in msd]
 
+    # Apply plot tau limit
+    if args['tau_limit']:
+        tl = args['tau_limit']
+        lim_tau = []
+        lim_msd = []
+        for k in range(len(tau)):
+            if tau[k] <= tl:
+                lim_tau.append(tau[k])
+                lim_msd.append(msd[k])
+        tau = lim_tau
+        msd = lim_msd
+    
+    # Set random color for plot    
     color = (random(), random(), random())
 
     # Plot scatter of log tau/msd
@@ -138,9 +152,9 @@ for i, obj in enumerate(objects_msd):
 
 plt.title("Log MSD over Log Tau")
 plt.xlabel("Log Tau")
+if args['tau_limit']:
+    plt.xlabel("Log Tau (log tau < {0})".format(args['tau_limit']))
 plt.ylabel("Log MSD ({0})".format(canvas['units'] + "^2"))
-#if len(objects_msd) > 1:
-#    plt.legend()
 plt.legend()
 plt.show()
 
