@@ -3,10 +3,12 @@ import sys, os, argparse, logging, json
 import numpy as np
 from matplotlib import pyplot as plt
 from matplotlib import animation
+from random import random
 
 # Setting up argument parser
 parser = argparse.ArgumentParser(description="Display position from json position data files")
 parser.add_argument("path", help="Path to file containing position data")
+parser.add_argument("-c", "--cumulative", action="store_true", help="Show position line for all frames rather than ")
 parser.add_argument("-d", "--debug", action="store_true", help="Show debug information")
 args = vars(parser.parse_args())
 
@@ -53,20 +55,42 @@ ax.set_ylabel("Y position ({0})".format(canvas['units']))
 ax.set_title("Jumping Bean Coordinates ({0})".format(canvas['units']))
 ax.xaxis.tick_top()
 
-plot = plt.scatter([], [])
+if args.get("cumulative"):
+    color = (random(), random(), random())
+    for i in range(len(frames) - 1):
+        logging.info("Loading position frame {0}...".format(i))
+        for o in range(len(frames[i]['X'])):
+            plt.plot([frames[i]['X'][o], frames[i + 1]['X'][o]], [frames[i]['Y'][o], frames[i+1]['Y'][o]], color=color)
 
-# Set up animation and updater function
-logging.info("Setting up animation...")
-def update_anim(i):
-    plot.set_offsets(np.array((i['X'], i['Y'])).T)
-    ax.set_title("Jumping Bean Coordinates ({1}), Frame {0}".format(i["number"], canvas['units']))
-    return plot
-anim = animation.FuncAnimation(fig, update_anim, frames=frames)
+    # Move x and y limits
+    logging.info("Calculating x and y limits...")
+    x_pos = [f['X'][0] for f in frames]
+    y_pos = [f['Y'][0] for f in frames]
+    ax.set_xlim(min(x_pos) - (2 * np.std(x_pos)), max(x_pos) + (2 * np.std(x_pos)))
+    ax.set_ylim(min(y_pos) - (2 * np.std(x_pos)), max(y_pos) + (2 * np.std(y_pos)))
 
-plt.show()
+    # Displaying plot
+    logging.info("Showing plot...")
+    plt.show()
 
-# Ask user if they want to save animation
-if input("Save animation? ").lower() in ('y', 'yes'):
-    logging.info("Saving animation as animation.mp4...")
-    writer = animation.FFMpegWriter(fps=1)
-    anim.save("animation.mp4", writer=writer)
+    # Ask user if they want to save figure
+    if input("Save figure? ").lower() in ('y', 'yes'):
+        logging.info("Saving figure as 'figure-positions.png'...")
+        fig.savefig("figure-positions")
+else:
+    # Set up animation and updater function
+    plot = plt.scatter([], [])
+    logging.info("Setting up animation...")
+    def update_anim(i):
+        plot.set_offsets(np.array((i['X'], i['Y'])).T)
+        ax.set_title("Jumping Bean Coordinates ({1}), Frame {0}".format(i["number"], canvas['units']))
+        return plot
+    anim = animation.FuncAnimation(fig, update_anim, frames=frames)
+
+    plt.show()
+
+    # Ask user if they want to save animation
+    if input("Save animation? ").lower() in ('y', 'yes'):
+        logging.info("Saving animation as animation.mp4...")
+        writer = animation.FFMpegWriter(fps=1)
+        anim.save("animation.mp4", writer=writer)

@@ -118,12 +118,12 @@ if input("View delay plot? ").lower() in ('y', 'yes'):
     bin_factor = 1
     if args['bin_factor']:
         bin_factor = args['bin_factor']
-    for i, d in enumerate(obj_delays):
+    for i, d in enumerate(total_delays):
         bins = 1
         if len(d) > 0:
             bins = int(max(d) * bin_factor)
         plt.hist(d, bins=bins, color=(random(), random(), random()), label="Object {0}".format(i))
-    if len(obj_delays) > 1:
+    if len(total_delays) > 1:
         plt.legend()
     #plt.yscale('log')
     plt.show()
@@ -140,16 +140,16 @@ if input("View displacement plot? ").lower() in ('y', 'yes'):
     ax.set_title("Displacement Distribution Histogram")
     ax.set_xlabel("Displacement ({0})".format(canvas['units']))
     ax.set_ylabel("Frequency")
-    min_disp = min([min(d) for d in obj_disps])
+    min_disp = min([min(d) for d in total_disps])
     min_disp = float('%.1f'%(min_disp))
     ax.set_xlim(min_disp, 1.0)
     #ax.set_xticks(np.arange(min_disp, 1.0, 0.1))
     bin_factor = 1
     if args['bin_factor']:
         bin_factor = args['bin_factor']
-    for i, d in enumerate(obj_disps):
+    for i, d in enumerate(total_disps):
         plt.hist(d, bins=40, color=(random(), random(), random()), label="Object {0}".format(i))
-    if len(obj_disps) > 1:
+    if len(total_disps) > 1:
         plt.legend()
     plt.show()
 
@@ -166,9 +166,9 @@ if input("View delay vs. displacement plot? ").lower() in ('y', 'yes'):
     ax.set_ylabel("Displacement ({0})".format(canvas['units']))
     ax.set_xlim(0, 200)
     ax.set_ylim(0, 1.0)
-    for i in range(len(obj_disps)):
-        plt.scatter(obj_delays[i], obj_disps[i], color=(random(), random(), random()))
-    if len(obj_disps) > 1:
+    for i in range(len(total_disps)):
+        plt.scatter(total_delays[i], total_disps[i], color=(random(), random(), random()))
+    if len(total_disps) > 1:
         plt.legend()
     plt.show()
 
