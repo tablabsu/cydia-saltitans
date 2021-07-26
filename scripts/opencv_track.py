@@ -3,7 +3,7 @@ import numpy as np
 import sys, os, argparse, logging, math, json, time
 
 WINDOW = 'Contour and Centroid Calculation - OpenCV'
-WINDOW_SIZE = (1500, 1100)
+WINDOW_SIZE = (1300, 900)
 TRACKBAR_NAME = "Frame"
 FONT = cv2.FONT_HERSHEY_SIMPLEX 
 CENTROID_MAX_RADIUS_PER = 0.05 # Percentage of width two centroids must be within to be combined
@@ -109,6 +109,7 @@ while True:
         pos_data['canvas']['width'] = args.get("real_width", width)
         pos_data['canvas']['height'] = args.get("real_height", height)
         pos_data['canvas']['units'] = args.get("units", "pixels")
+        pos_data['canvas']['fps'] = int(vs.get(cv2.CAP_PROP_FPS))
 
     # Create VideoWriter if not created already
     if not vw:

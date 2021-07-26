@@ -5,7 +5,7 @@ from matplotlib import pyplot as plt
 import numpy as np
 
 DEFAULT_THRESHOLD = 0.1
-MINIMUM_DELAY_FRAMES = 5
+MINIMUM_DELAY_FRAMES = 1.0
 
 # --------- UTILITY METHODS --------- 
 
@@ -21,7 +21,7 @@ parser.add_argument("path", nargs='+', help="Path to file containing position da
 parser.add_argument("-t", "--threshold", type=float, help="Threshold of activity, defaults to {0}".format(DEFAULT_THRESHOLD))
 parser.add_argument("-o", "--objects", help="Index of objects to calculate delays for, accepts comma-separated list of indices")
 parser.add_argument("-b", "--bin-factor", type=float, help="Bins are set to show every value in input data, this accepts a multiplier to increase or reduce that number (defaults to 1)")
-parser.add_argument("-mdf", "--min-delay-frames", type=int, help="Minimum threshold for number of frames between delays to be plotted")
+parser.add_argument("-mdf", "--min-delay-frames", type=float, help="Coefficient for minimum threshold for number of frames between delays to be plotted, usually 1.0, so minimum delay frames is 1.0 * CLIP_FPS")
 parser.add_argument("-d", "--debug", action="store_true", help="Show debug information")
 args = vars(parser.parse_args())
 
@@ -58,6 +58,8 @@ for p_num, path in enumerate(args['path']):
         data = json.load(fp)
         objects = data['objects']
         canvas = data['canvas']
+    fps = canvas['fps']
+    logging.info("Processing '{0}' at {1} fps...".format(path, canvas['fps']))
 
     # Filtering out specified objects
     obj_i = []
@@ -84,12 +86,27 @@ for p_num, path in enumerate(args['path']):
             if disp < threshold:
                 d += 1
             else:
-                if d >= mdf:
+                if d >= int(mdf * fps):
                     delays.append(d)
                     disps.append(disp)
                     d = 1
         obj_delays.append(delays)
         obj_disps.append(disps)
+
+    logging.info("Found {0} delays...".format(max([len(o) for o in obj_delays])))
+
+    # Convert all delays into seconds so clips w/ varying FPS values can be compared
+    obj_delays = [[int(d / fps) for d in o] for o in obj_delays]
+
+    ''' 
+    new_obj_delays = []
+    for o in obj_delays:
+        new_obj = []
+        for d in o:
+            new_obj.append(int(d / fps))
+        new_obj_delays.append(new_obj)
+    obj_delays = new_obj_delays
+    '''
 
     # Combine delays and displacements into total delays and displacements
     for i, o in enumerate(obj_delays):
@@ -109,12 +126,16 @@ logging.info("Setting up plots...")
 
 # Setting up delay plot
 if input("View delay plot? ").lower() in ('y', 'yes'):
+    logging.info("Plotting {0} delays...".format(max([len(o) for o in total_delays])))
     fig, ax = plt.subplots()
     fig.suptitle("Delay Distribution Histogram")
     ax.set_title("Motion threshold: {0} {1}".format(threshold, canvas['units']))
-    ax.set_xlabel("Delay (frames)")
+    ax.set_xlabel("Delay (seconds)")
     ax.set_ylabel("Log of Frequency")
     ax.set_xlim(mdf, 25)
+    xticks = list(range(0, 25, 5))
+    xticks = [mdf] + xticks[1:-1] + [25]
+    ax.set_xticks(xticks)
     bin_factor = 1
     if args['bin_factor']:
         bin_factor = args['bin_factor']
@@ -135,6 +156,7 @@ if input("View delay plot? ").lower() in ('y', 'yes'):
 
 # Setting up displacement plot
 if input("View displacement plot? ").lower() in ('y', 'yes'):
+    logging.info("Plotting {0} displacements...".format(max([len(o) for o in total_disps])))
     fig, ax = plt.subplots()
     #fig.suptitle("Displacement Distribution Histogram")
     ax.set_title("Displacement Distribution Histogram")
