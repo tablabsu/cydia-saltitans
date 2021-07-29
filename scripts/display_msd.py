@@ -154,7 +154,7 @@ plt.title("Log MSD over Log Tau")
 plt.xlabel("Log Tau")
 if args['tau_limit']:
     plt.xlabel("Log Tau (log tau < {0})".format(args['tau_limit']))
-plt.ylabel("Log MSD ({0})".format(canvas['units'] + "^2"))
+plt.ylabel("Log MSD ({0})".format(canvas['units'] + "²"))
 plt.legend()
 plt.show()
 

@@ -147,7 +147,7 @@ for i, set in enumerate(sets_msd):
 #fig.suptitle("Log MSD over Log Tau")
 #plt.title("MSD Slope: {0} ± {1}".format(round(np.mean(msd_slopes), 3), round(np.std(msd_slopes), 3)))
 plt.xlabel("Log Tau")
-plt.ylabel("Log MSD (cm^2)")
+plt.ylabel("Log MSD (cm²)")
 #plt.xlabel("Log Tau", fontsize=13)
 #plt.ylabel("Log MSD (cm^2)", fontsize=13)
 #ax.tick_params(axis='both', which='major', labelsize=14)
