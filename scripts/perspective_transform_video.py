@@ -4,7 +4,7 @@ import numpy as np
 import sys, os, argparse, logging, time, math
 
 WINDOW = 'Perspective Transformation (video) - OpenCV'
-WINDOW_SIZE = (1500, 1100)
+WINDOW_SIZE = (1300, 900)
 FONT = cv2.FONT_HERSHEY_SIMPLEX
 FOURCC = cv2.VideoWriter_fourcc(*'mp4v')
 

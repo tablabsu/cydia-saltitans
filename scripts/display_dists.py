@@ -2,6 +2,7 @@
 import sys, os, argparse, logging, json, math
 from random import random
 from matplotlib import pyplot as plt
+from scipy import stats as st
 import numpy as np
 
 DEFAULT_THRESHOLD = 0.1
@@ -98,16 +99,6 @@ for p_num, path in enumerate(args['path']):
     # Convert all delays into seconds so clips w/ varying FPS values can be compared
     obj_delays = [[int(d / fps) for d in o] for o in obj_delays]
 
-    ''' 
-    new_obj_delays = []
-    for o in obj_delays:
-        new_obj = []
-        for d in o:
-            new_obj.append(int(d / fps))
-        new_obj_delays.append(new_obj)
-    obj_delays = new_obj_delays
-    '''
-
     # Combine delays and displacements into total delays and displacements
     for i, o in enumerate(obj_delays):
         if p_num == 0:
@@ -131,7 +122,7 @@ if input("View delay plot? ").lower() in ('y', 'yes'):
     fig.suptitle("Delay Distribution Histogram")
     ax.set_title("Motion threshold: {0} {1}".format(threshold, canvas['units']))
     ax.set_xlabel("Delay (seconds)")
-    ax.set_ylabel("Log of Frequency")
+    ax.set_ylabel("Frequency")
     ax.set_xlim(mdf, 25)
     xticks = list(range(0, 25, 5))
     xticks = [mdf] + xticks[1:-1] + [25]
@@ -140,10 +131,21 @@ if input("View delay plot? ").lower() in ('y', 'yes'):
     if args['bin_factor']:
         bin_factor = args['bin_factor']
     for i, d in enumerate(total_delays):
+        # Removing data points outside x limits to not mess with bin calculation
+        d = [i for i in d if i <= 25 and i >= mdf]
+
+        # Calculating number of bins
         bins = 1
         if len(d) > 0:
             bins = int(max(d) * bin_factor)
-        plt.hist(d, bins=bins, color=(random(), random(), random()), label="Object {0}".format(i))
+        
+        # Plotting delays
+        _, bins, _ = plt.hist(d, bins=bins, color=(random(), random(), random()), label="Object {0}".format(i))
+
+        #params = st.levy.fit(d)
+        #best_fit = st.levy.pdf(bins, *params)
+        #plt.plot(bins, best_fit, color=(0, 0, 0))
+
     if len(total_delays) > 1:
         plt.legend()
     #plt.yscale('log')
