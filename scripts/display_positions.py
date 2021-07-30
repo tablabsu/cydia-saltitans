@@ -87,8 +87,9 @@ if args.get("cumulative"):
 
     # Ask user if they want to save figure
     if input("Save figure? ").lower() in ('y', 'yes'):
-        logging.info("Saving figure as 'figure-positions.png'...")
-        fig.savefig("figure-positions")
+        logging.info("Saving figure...")
+        #fig.savefig("figure-positions")
+        fig.savefig('figure-positions.svg', format='svg')
 else:
     # Set up animation and updater function
     plot = plt.scatter([], [])

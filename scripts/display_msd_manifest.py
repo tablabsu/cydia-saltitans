@@ -159,4 +159,5 @@ plt.show()
 if input("Save figure? ").lower() in ('y', 'yes'):
     logging.info("Saving figure...")
     plt.tight_layout()
-    fig.savefig("figure-msd")
+    #fig.savefig("figure-msd")
+    fig.savefig('figure-msd.svg', format='svg')

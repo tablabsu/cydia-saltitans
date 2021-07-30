@@ -38,7 +38,7 @@ for p_num, path in enumerate(args['path']):
         sys.exit(1)
     
     # Loading position data from file
-    logging.info("Loading position data...")
+    logging.info("Loading position data for '{0}'...".format(path))
     objects = []
     canvas = {}
     with open(path) as fp:
@@ -99,11 +99,13 @@ for p_num, path in enumerate(args['path']):
 #print(total_disps)
 logging.info("Setting up plots...")
 
+color = (random(), random(), random())
+
 # Setting up angular disp. plot
 fig, ax = plt.subplots(subplot_kw={'projection': 'polar'})
 ax.set_title("Angular Displacement Distribution")
 for i, d in enumerate(obj_disps):
-    plt.hist(d, bins=20, label="Object {0}".format(i), color=(random(), random(), random()))
+    plt.hist(d, bins=30, label="Object {0}".format(i), color=color)
 if len(obj_disps) > 1:
     plt.legend()
 plt.show()
@@ -111,3 +113,15 @@ plt.show()
 if input("Save figure? ").lower() in ('y', 'yes'):
     logging.info("Saving figure...")
     fig.savefig("figure-angular-disp")
+'''
+fig, ax = plt.subplots()
+for i, d in enumerate(obj_disps):
+    plt.hist(d, bins=30, label="Object {0}".format(i), color=color)
+if len(obj_disps) > 1:
+    plt.legend()
+plt.show()
+
+if input("Save figure? ").lower() in ('y', 'yes'):
+    logging.info("Saving figure...")
+    fig.savefig("figure-angular-disp-flat")
+'''

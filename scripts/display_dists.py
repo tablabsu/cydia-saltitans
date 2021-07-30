@@ -144,7 +144,8 @@ if input("View delay plot? ").lower() in ('y', 'yes'):
 
         #params = st.levy.fit(d)
         #best_fit = st.levy.pdf(bins, *params)
-        #plt.plot(bins, best_fit, color=(0, 0, 0))
+        best_fit = st.levy.pdf(bins, loc=1, scale=100)
+        plt.plot(bins, best_fit, color=(0, 0, 0))
 
     if len(total_delays) > 1:
         plt.legend()
