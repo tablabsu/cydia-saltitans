@@ -14,3 +14,4 @@ venv/
 *.bmp
 *.jpg
 *.png
+*.svg
