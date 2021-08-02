@@ -119,8 +119,8 @@ logging.info("Setting up plots...")
 if input("View delay plot? ").lower() in ('y', 'yes'):
     logging.info("Plotting {0} delays...".format(max([len(o) for o in total_delays])))
     fig, ax = plt.subplots()
-    fig.suptitle("Delay Distribution Histogram")
-    ax.set_title("Motion threshold: {0} {1}".format(threshold, canvas['units']))
+    #fig.suptitle("Delay Distribution Histogram")
+    #ax.set_title("Motion threshold: {0} {1}".format(threshold, canvas['units']))
     ax.set_xlabel("Delay (seconds)")
     ax.set_ylabel("Frequency")
     ax.set_xlim(mdf, 25)
@@ -155,14 +155,15 @@ if input("View delay plot? ").lower() in ('y', 'yes'):
     # Saving figure
     if input("Save figure? ").lower() in ('y', 'yes'):
         logging.info("Saving figure...")
-        fig.savefig("figure-delay")
+        #fig.savefig("figure-delay")
+        fig.savefig('figure-delay.svg', format='svg')
 
 # Setting up displacement plot
 if input("View displacement plot? ").lower() in ('y', 'yes'):
     logging.info("Plotting {0} displacements...".format(max([len(o) for o in total_disps])))
     fig, ax = plt.subplots()
     #fig.suptitle("Displacement Distribution Histogram")
-    ax.set_title("Displacement Distribution Histogram")
+    #ax.set_title("Displacement Distribution Histogram")
     ax.set_xlabel("Displacement ({0})".format(canvas['units']))
     ax.set_ylabel("Frequency")
     min_disp = min([min(d) for d in total_disps])
@@ -181,7 +182,8 @@ if input("View displacement plot? ").lower() in ('y', 'yes'):
     # Saving figure
     if input("Save figure? ").lower() in ('y', 'yes'):
         logging.info("Saving figure...")
-        fig.savefig("figure-displacement")
+        #fig.savefig("figure-displacement")
+        fig.savefig('figure-displacement.svg', format='svg')
 
 # Setting up delay vs. displacement plot
 if input("View delay vs. displacement plot? ").lower() in ('y', 'yes'):

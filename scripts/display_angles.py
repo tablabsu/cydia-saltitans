@@ -116,7 +116,9 @@ plt.show()
 
 if input("Save figure? ").lower() in ('y', 'yes'):
     logging.info("Saving figure...")
-    fig.savefig("figure-angular-disp")
+    #fig.savefig("figure-angular-disp")
+    fig.savefig('figure-angular-disp.svg', format='svg')
+
 '''
 fig, ax = plt.subplots()
 for i, d in enumerate(obj_disps):

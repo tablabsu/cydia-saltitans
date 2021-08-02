@@ -156,6 +156,8 @@ if not args['no_legend']:
     plt.legend(prop={ 'size': 6 })
 plt.show()
 
+logging.info("MSD Slope: {0} ± {1}".format(round(np.mean(msd_slopes), 3), round(np.std(msd_slopes), 3)))
+
 if input("Save figure? ").lower() in ('y', 'yes'):
     logging.info("Saving figure...")
     plt.tight_layout()
