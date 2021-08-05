@@ -119,14 +119,9 @@ logging.info("Setting up plots...")
 if input("View delay plot? ").lower() in ('y', 'yes'):
     logging.info("Plotting {0} delays...".format(max([len(o) for o in total_delays])))
     fig, ax = plt.subplots()
-    #fig.suptitle("Delay Distribution Histogram")
-    #ax.set_title("Motion threshold: {0} {1}".format(threshold, canvas['units']))
-    ax.set_xlabel("Delay (seconds)")
+    ax.set_xlabel("t_D (seconds)")
     ax.set_ylabel("Frequency")
-    ax.set_xlim(mdf, 25)
-    xticks = list(range(0, 25, 5))
-    xticks = [mdf] + xticks[1:-1] + [25]
-    ax.set_xticks(xticks)
+    ax.set_xlim(0, 25)
     bin_factor = 1
     if args['bin_factor']:
         bin_factor = args['bin_factor']
@@ -140,12 +135,20 @@ if input("View delay plot? ").lower() in ('y', 'yes'):
             bins = int(max(d) * bin_factor)
         
         # Plotting delays
-        _, bins, _ = plt.hist(d, bins=bins, color=(random(), random(), random()), label="Object {0}".format(i))
+        hist, bins, _ = plt.hist(d, density=True, bins=bins, color=(0, 0, 0), histtype='step', label="Object {0}".format(i))
+        
+        #logging.info("Hist: {0}\nBins: {1}".format(hist, bins))
+        #hist_str = []
+        #for i in range(len(hist)):
+        #    hist_str.append("({0}, {1})".format(bins[i], hist[i]))
+        #logging.info("Hist Str: {0}".format(",".join(hist_str)))
 
+        #params = st.expon.fit(d)
+        #best_fit = st.expon.pdf(bins, *params)
+        #plt.plot(bins, best_fit, color=(1, 0, 0))
         #params = st.levy.fit(d)
         #best_fit = st.levy.pdf(bins, *params)
-        best_fit = st.levy.pdf(bins, loc=1, scale=100)
-        plt.plot(bins, best_fit, color=(0, 0, 0))
+        #plt.plot(bins, best_fit, color=(1, 0, 0))
 
     if len(total_delays) > 1:
         plt.legend()
@@ -162,19 +165,26 @@ if input("View delay plot? ").lower() in ('y', 'yes'):
 if input("View displacement plot? ").lower() in ('y', 'yes'):
     logging.info("Plotting {0} displacements...".format(max([len(o) for o in total_disps])))
     fig, ax = plt.subplots()
-    #fig.suptitle("Displacement Distribution Histogram")
-    #ax.set_title("Displacement Distribution Histogram")
-    ax.set_xlabel("Displacement ({0})".format(canvas['units']))
+    ax.set_xlabel("δ ({0})".format(canvas['units']))
     ax.set_ylabel("Frequency")
-    min_disp = min([min(d) for d in total_disps])
-    min_disp = float('%.1f'%(min_disp))
-    ax.set_xlim(min_disp, 1.0)
-    #ax.set_xticks(np.arange(min_disp, 1.0, 0.1))
+    ax.set_xlim(0, 1.0)
     bin_factor = 1
     if args['bin_factor']:
         bin_factor = args['bin_factor']
     for i, d in enumerate(total_disps):
-        plt.hist(d, bins=40, color=(random(), random(), random()), label="Object {0}".format(i))
+        hist, bins, _ = plt.hist(d, density=True, bins=40, color=(0, 0, 0), histtype='step', label="Object {0}".format(i))
+
+        hist_str = []
+        for i in range(len(hist)):
+            hist_str.append("({0}, {1})".format(bins[i], hist[i]))
+        logging.info("Hist Str: {0}".format(",".join(hist_str)))
+
+        
+        params = st.expon.fit(d)
+        best_fit = st.expon.pdf(bins, *params)
+        plt.plot(bins, best_fit, color=(1, 0, 0))
+        logging.info("Fit exponential distribution to displacement with params: {0}".format(params))
+
     if len(total_disps) > 1:
         plt.legend()
     plt.show()
@@ -194,7 +204,7 @@ if input("View delay vs. displacement plot? ").lower() in ('y', 'yes'):
     ax.set_xlim(0, 200)
     ax.set_ylim(0, 1.0)
     for i in range(len(total_disps)):
-        plt.scatter(total_delays[i], total_disps[i], color=(random(), random(), random()))
+        plt.scatter(total_delays[i], total_disps[i], color=(0, 0, 0))
     if len(total_disps) > 1:
         plt.legend()
     plt.show()

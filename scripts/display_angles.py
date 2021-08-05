@@ -100,7 +100,7 @@ logging.info("Setting up plots...")
 
 # Reversing values so 0 deg = forward, 180 deg = backward
 obj_disps = [[(d - math.pi) if (d + math.pi) >= (2*math.pi) else (d + math.pi) for d in obj ] for obj in obj_disps]
-color = (random(), random(), random())
+color = (0, 0, 0)
 
 # Setting up angular disp. plot
 fig, ax = plt.subplots(subplot_kw={'projection': 'polar'})
@@ -109,7 +109,7 @@ ax.set_theta_zero_location('N')
 ax.set_xticklabels(["0° (Forwards)", "45°", "90°", "135°", "180° (Backwards)", "225°", "270°", "315°"])
 ax.set_yticklabels([])
 for i, d in enumerate(obj_disps):
-    plt.hist(d, bins=30, label="Object {0}".format(i), color=color)
+    plt.hist(d, density=True, histtype='step', bins=30, label="Object {0}".format(i), color=color)
 if len(obj_disps) > 1:
     plt.legend()
 plt.show()

@@ -103,8 +103,10 @@ for i, set in enumerate(sets_msd):
     tau = [t * (1 / set['fps']) for t in tau]
 
     # Log both dimensions
-    tau = [math.log(i, 10) if i != 0 else i for i in tau]
-    msd = [math.log(i, 10) if i != 0 else i for i in msd]
+    #tau = [math.log(i, 10) if i != 0 else i for i in tau]
+    #msd = [math.log(i, 10) if i != 0 else i for i in msd]
+    ax.set_xscale('log')
+    ax.set_yscale('log')
 
     # Apply tau limit
     lim_tau = []
@@ -139,19 +141,15 @@ for i, set in enumerate(sets_msd):
         line_type = '-'
 
     # Plot trendlines of log tau/msd
-    pf = np.polyfit(lim_tau, lim_msd, 1)
+    log_lim_tau = np.log10(lim_tau)
+    log_lim_msd = np.log10(lim_msd)
+    pf = np.polyfit(log_lim_tau, log_lim_msd, 1)
     p = np.poly1d(pf)
     msd_slopes.append(pf[0])
-    plt.plot(lim_tau, p(lim_tau), line_type, label='{0} : Slope {1:.2f}'.format(set['set'], pf[0]), color=color)
+    plt.plot(np.power(10, log_lim_tau), np.power(10, p(log_lim_tau)), line_type, label='{0} : Slope {1:.2f}'.format(set['set'], pf[0]), color=color)
 
-#fig.suptitle("Log MSD over Log Tau")
-#plt.title("MSD Slope: {0} ± {1}".format(round(np.mean(msd_slopes), 3), round(np.std(msd_slopes), 3)))
-plt.xlabel("Log Tau")
-plt.ylabel("Log MSD (cm²)")
-#plt.xlabel("Log Tau", fontsize=13)
-#plt.ylabel("Log MSD (cm^2)", fontsize=13)
-#ax.tick_params(axis='both', which='major', labelsize=14)
-#ax.tick_params(axis='both', which='minor', labelsize=10)
+plt.xlabel("τ (seconds)")
+plt.ylabel("MSD (cm²)")
 if not args['no_legend']:
     plt.legend(prop={ 'size': 6 })
 plt.show()
