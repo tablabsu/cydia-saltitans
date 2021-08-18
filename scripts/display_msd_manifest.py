@@ -148,7 +148,7 @@ for i, set in enumerate(sets_msd):
     msd_slopes.append(pf[0])
     plt.plot(np.power(10, log_lim_tau), np.power(10, p(log_lim_tau)), line_type, label='{0} : Slope {1:.2f}'.format(set['set'], pf[0]), color=color)
 
-plt.xlabel("τ (seconds)")
+plt.xlabel("τ (sec)")
 plt.ylabel("MSD (cm²)")
 if not args['no_legend']:
     plt.legend(prop={ 'size': 6 })

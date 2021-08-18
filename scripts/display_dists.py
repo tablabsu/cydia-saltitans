@@ -158,8 +158,8 @@ if input("View delay plot? ").lower() in ('y', 'yes'):
     # Saving figure
     if input("Save figure? ").lower() in ('y', 'yes'):
         logging.info("Saving figure...")
-        #fig.savefig("figure-delay")
-        fig.savefig('figure-delay.svg', format='svg')
+        fig.savefig("figure-delay")
+        #fig.savefig('figure-delay.svg', format='svg')
 
 # Setting up displacement plot
 if input("View displacement plot? ").lower() in ('y', 'yes'):
