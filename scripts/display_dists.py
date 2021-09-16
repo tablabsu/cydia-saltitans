@@ -149,6 +149,10 @@ if input("View delay plot? ").lower() in ('y', 'yes'):
         #params = st.levy.fit(d)
         #best_fit = st.levy.pdf(bins, *params)
         #plt.plot(bins, best_fit, color=(1, 0, 0))
+        params = st.invgamma.fit(d + [0])
+        best_fit = st.invgamma.pdf(bins, *params)
+        plt.plot(bins, best_fit, color=(1, 0, 0))
+
 
     if len(total_delays) > 1:
         plt.legend()
@@ -159,7 +163,7 @@ if input("View delay plot? ").lower() in ('y', 'yes'):
     if input("Save figure? ").lower() in ('y', 'yes'):
         logging.info("Saving figure...")
         fig.savefig("figure-delay")
-        #fig.savefig('figure-delay.svg', format='svg')
+        fig.savefig('figure-delay.svg', format='svg')
 
 # Setting up displacement plot
 if input("View displacement plot? ").lower() in ('y', 'yes'):
@@ -192,7 +196,7 @@ if input("View displacement plot? ").lower() in ('y', 'yes'):
     # Saving figure
     if input("Save figure? ").lower() in ('y', 'yes'):
         logging.info("Saving figure...")
-        #fig.savefig("figure-displacement")
+        fig.savefig("figure-displacement")
         fig.savefig('figure-displacement.svg', format='svg')
 
 # Setting up delay vs. displacement plot

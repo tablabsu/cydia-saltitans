@@ -159,5 +159,5 @@ logging.info("MSD Slope: {0} ± {1}".format(round(np.mean(msd_slopes), 3), round
 if input("Save figure? ").lower() in ('y', 'yes'):
     logging.info("Saving figure...")
     plt.tight_layout()
-    #fig.savefig("figure-msd")
+    fig.savefig("figure-msd")
     fig.savefig('figure-msd.svg', format='svg')
