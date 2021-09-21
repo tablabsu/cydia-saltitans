@@ -153,9 +153,10 @@ hist, bins, _ = plt.hist(d, density=True, bins=max(d), color=(0, 0, 0), histtype
 
 # Fit distribution and plot
 params = st.invgamma.fit(d + [0])
-logging.info("Delay distribution parameters: {0}".format(params))
-best_fit = st.invgamma.pdf(bins, *params)
-plt.plot(bins, best_fit, color=(1, 0, 0))
+logging.info("Delay fit parameters: {0}".format(params))
+fit_x = [i/10 for i in list(range(0, 250))]
+best_fit = st.invgamma.pdf(fit_x, *params)
+plt.plot(fit_x, best_fit, color=(1, 0, 0))
 
 # Show plot
 plt.show()
@@ -178,9 +179,10 @@ hist, bins, _ = plt.hist(d, density=True, bins=40, color=(0, 0, 0), histtype='st
 
 # Fit distribution and plot
 params = st.expon.fit(d)
-best_fit = st.expon.pdf(bins, *params)
-logging.info("Displacement distribution parameters: {0}".format(params))
-plt.plot(bins, best_fit, color=(1, 0, 0))
+logging.info("Displacement fit parameters: {0}".format(params))
+fit_x = [i/100 for i in list(range(math.ceil(min(d) * 100), 100))]
+best_fit = st.expon.pdf(fit_x, *params)
+plt.plot(fit_x, best_fit, color=(1, 0, 0))
 
 # Show plot
 plt.show()
