@@ -1,7 +1,8 @@
 #! python3
-import sys, os, argparse, logging, json, math, random
-from scipy import stats as st
+import sys, os, argparse, logging, json, random
+import math as m
 import numpy as np
+from scipy import stats as st
 
 # ----------------- CONSTANTS -----------------
 
@@ -23,38 +24,59 @@ MAX_DISP = 1.0
 
 # Parse time string into number of seconds
 def parse_time_string(tstr):
-    pass
+    total_secs = 0
+    numstr = "0"
+    for c in tstr:
+        if c.isdigit():
+            numstr += c
+        else:
+            num = int(numstr)
+            if c == "s":
+                total_secs += num
+            if c == "m":
+                total_secs += num * 60
+            if c == "h":
+                total_secs += num * 3600
+            numstr = "0"
+    return total_secs
 
 # Sample from delay distribution
 def sampleDelay():
-    d = st.invgamma.rvs(DELAY_SHAPE, loc=DELAY_LOC, scale=DELAY_SCALE)
+    d = st.invgamma.rvs(DELAY_SHAPE, loc=DELAY_LOC, scale=DELAY_SCALE, random_state=1)
     while d > MAX_DELAY:
-        d = st.invgamma.rvs(DELAY_SHAPE, loc=DELAY_LOC, scale=DELAY_SCALE)
+        d = st.invgamma.rvs(DELAY_SHAPE, loc=DELAY_LOC, scale=DELAY_SCALE, random_state=1)
     return d
 
 # Sample from displacement distribution
 def sampleDisp():
-    d = st.expon.rvs(loc=DISP_LOC, scale=DISP_SCALE)
+    d = st.expon.rvs(loc=DISP_LOC, scale=DISP_SCALE, random_state=1)
     while d > MAX_DISP:
-        d = st.expon.rvs(loc=DISP_LOC, scale=DISP_SCALE)
+        d = st.expon.rvs(loc=DISP_LOC, scale=DISP_SCALE, random_state=1)
     return d
 
 # Sample from angle distribution
 def sampleAngle():
-    return random.uniform(-math.pi, math.pi)
+    return random.uniform(-m.pi, m.pi)
 
 class Bean:
     def __init__(self, x, y):
-        self.pos = [x, y]
+        self.pos = np.array([float(x), float(y)])
         self.delay = sampleDelay()
-        self.angle = sampleAngle()
     def move(self):
         if (self.delay > 0):
             self.delay -= (1 / DEFAULT_FPS)
         if (self.delay <= 0):
+            # Sample delay/disp/angle
             self.delay = sampleDelay()
-            self.angle = sampleAngle()
+            angle = sampleAngle()
             disp = sampleDisp()
+            # Create velocity vector and rotation matrix
+            vel = np.array([0, disp])
+            rot = np.array([[m.cos(angle), -m.sin(angle)], [m.sin(angle), m.cos(angle)]])
+            # Rotate velocity vector and apply to position vector
+            rot_vel = np.dot(rot, vel)
+            self.pos += rot_vel
+
 
 # ---------------------------------------------
 
@@ -86,5 +108,22 @@ beans = []
 for i in range(args.get("num_beans")):
     beans.append(Bean(0, 0))
 
-for i, b in enumerate(beans):
-    print("{0} {1} {2}".format(i, b.pos[0], b.pos[1]))
+objects = []
+for i in range(len(beans)):
+    objects.append({"X": [], "Y": []})
+
+for t in range(parse_time_string(args.get("length"))):
+    print("Frame {0}: ".format(t))
+    for i, b in enumerate(beans):
+        b.move()
+        objects[i]["X"].append(b.pos[0])
+        objects[i]["Y"].append(b.pos[1])
+        print("    Bean {0} - X: {1} Y: {2} Delay: {3} ".format(i, round(b.pos[0], 2), round(b.pos[1], 2), round(b.delay, 2)))
+
+pos_files = list(filter(lambda n : n.endswith(".json"), os.listdir("../experiments/simulations/")))
+pos_files = list(map(lambda n : int(n.split(".")[0].split("_")[-1]), pos_files))
+
+pos_filename = "../experiments/simulations/pos_data_{0}.json".format(max(pos_files) + 1 if len(pos_files) > 0 else 0)
+
+with open(pos_filename, "w+") as fp:
+    json.dump({"canvas": canvas, "objects": objects}, fp)

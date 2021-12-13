@@ -22,6 +22,7 @@ parser.add_argument('path', help='Path to manifest file')
 parser.add_argument("-t", "--threshold", type=float, help="Threshold of activity, defaults to {0}".format(DEFAULT_THRESHOLD))
 parser.add_argument("-mdf", "--min-delay-frames", type=float, help="Coefficient for minimum threshold for number of frames between delays to be plotted, usually 1.0, so minimum delay frames is 1.0 * CLIP_FPS")
 parser.add_argument("-g", "--gen-individual", action="store_true", help="Generate individual delay and displacement plots for each dataset, saved in separate folders")
+parser.add_argument("-hd", "--hardcoded-dist", action="store_true", help="Use the hard-coded distribution for delay/displacement")
 parser.add_argument("-d", "--debug", action="store_true", help="Show debug information")
 args = vars(parser.parse_args())
 
@@ -152,11 +153,16 @@ d = [i for i in total_delays if i <= 25 and i >= mdf]
 hist, bins, _ = plt.hist(d, density=True, bins=max(d), color=(0, 0, 0), histtype='step')
 
 # Fit distribution and plot
-params = st.invgamma.fit(d + [0])
-logging.info("Delay fit parameters: {0}".format(params))
-fit_x = [i/10 for i in list(range(0, 250))]
-best_fit = st.invgamma.pdf(fit_x, *params)
-plt.plot(fit_x, best_fit, color=(1, 0, 0))
+if not args.get("hardcoded_dist"):
+    params = st.invgamma.fit(d + [0])
+    logging.info("Delay fit parameters: {0}".format(params))
+    fit_x = [i/10 for i in list(range(0, 250))]
+    best_fit = st.invgamma.pdf(fit_x, *params)
+    plt.plot(fit_x, best_fit, color=(1, 0, 0))
+else:
+    fit_x = [i/10 for i in list(range(0, 250))]
+    best_fit = st.invgamma.pdf(fit_x, 1.72387, -0.06674, 3.51950)
+    plt.plot(fit_x, best_fit, color=(1, 0, 0))
 
 # Show plot
 plt.show()
@@ -178,11 +184,16 @@ d = total_disps
 hist, bins, _ = plt.hist(d, density=True, bins=40, color=(0, 0, 0), histtype='step')
 
 # Fit distribution and plot
-params = st.expon.fit(d)
-logging.info("Displacement fit parameters: {0}".format(params))
-fit_x = [i/100 for i in list(range(math.ceil(min(d) * 100), 100))]
-best_fit = st.expon.pdf(fit_x, *params)
-plt.plot(fit_x, best_fit, color=(1, 0, 0))
+if not args.get("hardcoded_dist"):
+    params = st.expon.fit(d)
+    logging.info("Displacement fit parameters: {0}".format(params))
+    fit_x = [i/100 for i in list(range(math.ceil(min(d) * 100), 100))]
+    best_fit = st.expon.pdf(fit_x, *params)
+    plt.plot(fit_x, best_fit, color=(1, 0, 0))
+else:
+    fit_x = [i/100 for i in list(range(math.ceil(min(d) * 100), 100))]
+    best_fit = st.expon.pdf(fit_x, 0.1, 0.25565)
+    plt.plot(fit_x, best_fit, color=(1, 0, 0))
 
 # Show plot
 plt.show()
