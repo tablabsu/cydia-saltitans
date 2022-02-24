@@ -3,6 +3,7 @@ import sys, os, argparse, logging, json, math
 import numpy as np
 from random import random
 from matplotlib import pyplot as plt
+from matplotlib import rcParams as rcp
 
 # --------- UTILITY METHODS --------- 
 
@@ -16,7 +17,7 @@ def dist(x1, y1, x2, y2):
 parser = argparse.ArgumentParser(description="Display mean-squared displacement (MSD) plots from position data files linked in manifest file")
 parser.add_argument("path", help="Path to manifest file, contains paths to data files and properties associated")
 parser.add_argument("-ns", "--no-scatter", action='store_true', help="Disables showing scatter plots")
-parser.add_argument("-nl", "--no-legend", action='store_true', help='Disable showing legend on resulting plot')
+parser.add_argument("-l", "--legend", action='store_true', help='Show legend on resulting plot')
 parser.add_argument("-d", "--debug", action="store_true", help="Show debug information")
 args = vars(parser.parse_args())
 
@@ -44,6 +45,7 @@ with open(args['path']) as fp:
 datasets = list(set([f['set'] for f in manifest]))
 datasets.sort()
 logging.debug("Datasets: {0}".format(datasets))
+logging.debug("Number of datasets: {0}".format(len(datasets)))
 
 sets_msd = []
 for set in datasets:
@@ -91,6 +93,7 @@ for set in datasets:
 
     sets_msd.append(set_msd)
 
+rcp.update({'font.size': 20})
 # Set up plot
 logging.info("Setting up plot...")
 fig, ax = plt.subplots()
@@ -150,14 +153,14 @@ for i, set in enumerate(sets_msd):
 
 plt.xlabel("τ (sec)")
 plt.ylabel("MSD (cm²)")
-if not args['no_legend']:
+if args['legend']:
     plt.legend(prop={ 'size': 6 })
+plt.tight_layout()
 plt.show()
 
 logging.info("MSD Slope: {0} ± {1}".format(round(np.mean(msd_slopes), 3), round(np.std(msd_slopes), 3)))
 
 if input("Save figure? ").lower() in ('y', 'yes'):
     logging.info("Saving figure...")
-    plt.tight_layout()
     fig.savefig("figure-msd.png")
     fig.savefig('figure-msd.svg', format='svg')

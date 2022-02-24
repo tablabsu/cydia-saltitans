@@ -1,5 +1,5 @@
 #! python3
-import sys, os, argparse, logging, json, random
+import sys, os, argparse, logging, json, random, time
 import math as m
 import numpy as np
 from scipy import stats as st
@@ -17,8 +17,14 @@ DELAY_SCALE = 3.5195
 DISP_LOC = 0.1
 DISP_SCALE = 0.2556
 
+DISP_MATRIX_DIMS = (1000, 1000)
+DELAY_MATRIX_DIMS = (1000, 1000)
+
 MAX_DELAY = 25
 MAX_DISP = 1.0
+
+delay_mat = np.array([])
+disp_mat = np.array([])
 
 # --------- UTILITY METHODS / CLASSES --------- 
 
@@ -42,16 +48,20 @@ def parse_time_string(tstr):
 
 # Sample from delay distribution
 def sampleDelay():
-    d = st.invgamma.rvs(DELAY_SHAPE, loc=DELAY_LOC, scale=DELAY_SCALE, random_state=1)
+    i = np.random.randint(DELAY_MATRIX_DIMS[0], size=2)
+    d = delay_mat[i[0]][i[1]]
     while d > MAX_DELAY:
-        d = st.invgamma.rvs(DELAY_SHAPE, loc=DELAY_LOC, scale=DELAY_SCALE, random_state=1)
-    return d
+        i = np.random.randint(DELAY_MATRIX_DIMS[0], size=2)
+        d = delay_mat[i[0]][i[1]]
+    return d - 1
 
 # Sample from displacement distribution
 def sampleDisp():
-    d = st.expon.rvs(loc=DISP_LOC, scale=DISP_SCALE, random_state=1)
+    i = np.random.randint(DISP_MATRIX_DIMS[0], size=2)
+    d = disp_mat[i[0]][i[1]]
     while d > MAX_DISP:
-        d = st.expon.rvs(loc=DISP_LOC, scale=DISP_SCALE, random_state=1)
+        i = np.random.randint(DISP_MATRIX_DIMS[0], size=2)
+        d = disp_mat[i[0]][i[1]]
     return d
 
 # Sample from angle distribution
@@ -62,6 +72,7 @@ class Bean:
     def __init__(self, x, y):
         self.pos = np.array([float(x), float(y)])
         self.delay = sampleDelay()
+        self.disp = sampleDisp()
     def move(self):
         if (self.delay > 0):
             self.delay -= (1 / DEFAULT_FPS)
@@ -69,13 +80,15 @@ class Bean:
             # Sample delay/disp/angle
             self.delay = sampleDelay()
             angle = sampleAngle()
-            disp = sampleDisp()
             # Create velocity vector and rotation matrix
-            vel = np.array([0, disp])
+            vel = np.array([0, self.disp])
             rot = np.array([[m.cos(angle), -m.sin(angle)], [m.sin(angle), m.cos(angle)]])
             # Rotate velocity vector and apply to position vector
             rot_vel = np.dot(rot, vel)
             self.pos += rot_vel
+            # Sample disp for next jump
+            self.disp = sampleDisp()
+
 
 
 # ---------------------------------------------
@@ -90,7 +103,7 @@ args = vars(parser.parse_args())
 # Setting up logger
 format = "%(levelname)s : %(message)s"
 logging.basicConfig(format=format, level=logging.INFO, datefmt="%H:%M:%S")
-logging.info("Starting plotting...")
+logging.info("Starting simulation...")
 if args.get("debug"):
     logging.getLogger().setLevel(logging.DEBUG)
 logging.debug("ARGS: {0}".format(args))
@@ -102,6 +115,10 @@ canvas = {
     "units": DEFAULT_UNITS,
     "fps": DEFAULT_FPS
 }
+
+# Creating delay/disp sample matrix
+delay_mat = st.invgamma.rvs(DELAY_SHAPE, loc=DELAY_LOC, scale=DELAY_SCALE, size=DELAY_MATRIX_DIMS)
+disp_mat = st.expon.rvs(loc=DISP_LOC, scale=DISP_SCALE, size=DISP_MATRIX_DIMS)
 
 # Creating beans
 beans = []
@@ -118,7 +135,7 @@ for t in range(parse_time_string(args.get("length"))):
         b.move()
         objects[i]["X"].append(b.pos[0])
         objects[i]["Y"].append(b.pos[1])
-        print("    Bean {0} - X: {1} Y: {2} Delay: {3} ".format(i, round(b.pos[0], 2), round(b.pos[1], 2), round(b.delay, 2)))
+        print("    Bean {0} - X: {1} Y: {2} Delay: {3} Disp: {4}".format(i, round(b.pos[0], 2), round(b.pos[1], 2), round(b.delay, 2), round(b.disp, 2)))
 
 pos_files = list(filter(lambda n : n.endswith(".json"), os.listdir("../experiments/simulations/")))
 pos_files = list(map(lambda n : int(n.split(".")[0].split("_")[-1]), pos_files))

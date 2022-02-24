@@ -2,6 +2,7 @@
 import sys, os, argparse, logging, json, math
 from random import random
 from matplotlib import pyplot as plt
+from matplotlib import rcParams as rcp
 
 # --------- UTILITY METHODS --------- 
 
@@ -103,6 +104,7 @@ obj_disps = [[(d - math.pi) if (d + math.pi) >= (2*math.pi) else (d + math.pi) f
 color = (0, 0, 0)
 
 # Setting up angular disp. plot
+rcp.update({'font.size': 20})
 fig, ax = plt.subplots(subplot_kw={'projection': 'polar'})
 #ax.set_title("Angular Displacement Distribution")
 ax.set_theta_zero_location('N')
@@ -116,7 +118,7 @@ plt.show()
 
 if input("Save figure? ").lower() in ('y', 'yes'):
     logging.info("Saving figure...")
-    #fig.savefig("figure-angular-disp")
+    fig.savefig("figure-angular-disp")
     fig.savefig('figure-angular-disp.svg', format='svg')
 
 '''

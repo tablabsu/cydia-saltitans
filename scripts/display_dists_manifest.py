@@ -2,6 +2,7 @@
 import sys, os, argparse, logging, json, math
 from random import random
 from matplotlib import pyplot as plt
+from matplotlib import rcParams as rcp
 from scipy import stats as st
 import numpy as np
 
@@ -88,7 +89,7 @@ for set in datasets:
             units = canvas['units']
 
         # Calculating delays and associated displacements
-        logging.info("Calculating delays...")
+        logging.info("    Calculating delays & displacements...")
         threshold = args['threshold']
         if threshold is None:
             threshold = DEFAULT_THRESHOLD
@@ -106,6 +107,8 @@ for set in datasets:
                     delays.append(d)
                     disps.append(disp)
                     d = 1
+
+        logging.info("    Found {} delays and {} displacements.".format(len(delays), len(disps)))
         
         # Convert all delays into seconds so clips w/ varying FPS values can be compared
         delays = [int(d / fps) for d in delays]
@@ -145,6 +148,7 @@ logging.info("Setting up plots...")
 
 # Setting up plot
 logging.info("Plotting {0} delays...".format(len(total_delays)))
+rcp.update({'font.size': 20})
 fig, ax = plt.subplots()
 ax.set_xlabel("t_D (seconds)")
 ax.set_ylabel("Frequency")
@@ -161,7 +165,7 @@ if not args.get("hardcoded_dist"):
     plt.plot(fit_x, best_fit, color=(1, 0, 0))
 else:
     fit_x = [i/10 for i in list(range(0, 250))]
-    best_fit = st.invgamma.pdf(fit_x, 1.72387, -0.06674, 3.51950)
+    best_fit = st.invgamma.pdf(fit_x, 1.7239, loc=-0.0667, scale=3.5195)
     plt.plot(fit_x, best_fit, color=(1, 0, 0))
 
 # Show plot
@@ -176,6 +180,7 @@ if input("Save figure? ").lower() in ('y', 'yes'):
 # Displacement plot
 
 logging.info("Plotting {0} displacements...".format(len(total_disps)))
+rcp.update({'font.size': 20})
 fig, ax = plt.subplots()
 ax.set_xlabel("δ ({0})".format(units))
 ax.set_ylabel("Frequency")
@@ -192,7 +197,7 @@ if not args.get("hardcoded_dist"):
     plt.plot(fit_x, best_fit, color=(1, 0, 0))
 else:
     fit_x = [i/100 for i in list(range(math.ceil(min(d) * 100), 100))]
-    best_fit = st.expon.pdf(fit_x, 0.1, 0.25565)
+    best_fit = st.expon.pdf(fit_x, 0.1, 0.2556)
     plt.plot(fit_x, best_fit, color=(1, 0, 0))
 
 # Show plot

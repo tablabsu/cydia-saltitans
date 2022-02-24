@@ -57,7 +57,7 @@ while True:
     frame_num = int(vs.get(cv2.CAP_PROP_POS_FRAMES))
     
     # Process frame
-    frame = cv2.GaussianBlur(frame, (5, 5), 0)
+    frame = cv2.GaussianBlur(frame, (21, 21), 0)
     frame = cv2.addWeighted(frame, 1.6, frame, 0, 0)
     #frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
     #frame = cv2.equalizeHist(frame)

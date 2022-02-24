@@ -58,6 +58,7 @@ parser.add_argument("path", help="Path to video, ending in .avi or .mp4")
 parser.add_argument("-rw", "--real-width", type=float, help="Real width of canvas, defaults to image height")
 parser.add_argument("-rh", "--real-height", type=float, help="Real height of canvas, defaults to image height")
 parser.add_argument("-u", "--units",  help="Units for canvas, defaults to 'pixels'")
+parser.add_argument("-t", "--threshold", type=int, help="Image thresholding value, from 0 to 255, defaults to 128")
 parser.add_argument("-d", "--debug", action="store_true", help="Show debug information")
 args = vars(parser.parse_args())
 
@@ -113,7 +114,10 @@ while True:
 
     # Create VideoWriter if not created already
     if not vw:
-        vw = cv2.VideoWriter('track-output.mp4', FOURCC, int(frame_total / 60), (width, height))
+        vw_fname = list(os.path.split(args['path']))
+        vw_fname[-1] = "track-output.mp4"
+        vw_fname = os.path.relpath(os.path.join(*vw_fname))
+        vw = cv2.VideoWriter(vw_fname, FOURCC, int(frame_total / 60), (width, height))
 
     # Convert frame to gray colorspace
     framegray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
@@ -121,7 +125,7 @@ while True:
     #ret, threshold = cv2.threshold(framegray, 128, 255, 0)
     #threshold = cv2.adaptiveThreshold(framegray, 255, cv2.ADAPTIVE_THRESH_MEAN_C, cv2.THRESH_BINARY, 11, 2)
     #ret, threshold = cv2.threshold(framegray, 128, 255, cv2.THRESH_TRUNC+cv2.THRESH_OTSU)
-    ret, threshold = cv2.threshold(framegray, 128, 255, cv2.THRESH_BINARY)
+    ret, threshold = cv2.threshold(framegray, args.get("threshold", 128), 255, cv2.THRESH_BINARY)
     # Find and draw contours using cv2 simple chain approximation
     contours, hierarchy = cv2.findContours(threshold, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
     cv2.drawContours(frame, contours, -1, (0, 255, 0), 3)

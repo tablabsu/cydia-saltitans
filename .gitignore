@@ -3,6 +3,7 @@
 # Folders
 experiments/
 venv/
+pypy-venv/
 
 # File Types
 *.pv
@@ -15,3 +16,4 @@ venv/
 *.jpg
 *.png
 *.svg
+*.zip

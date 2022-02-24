@@ -3,6 +3,7 @@ import sys, os, argparse, logging, json
 import numpy as np
 from matplotlib import pyplot as plt
 from matplotlib import animation
+from matplotlib import rcParams as rcp
 from random import random
 from random import uniform
 import math
@@ -48,6 +49,7 @@ for i in range(len(frames)):
     frames[i]["number"] = i + 1
 
 # Setting up plots
+rcp.update({'font.size': 20})
 logging.info("Setting up plots...")
 fig, ax = plt.subplots()
 ax.set_xlim(0, canvas['width'])
@@ -88,7 +90,7 @@ if args.get("cumulative"):
     # Ask user if they want to save figure
     if input("Save figure? ").lower() in ('y', 'yes'):
         logging.info("Saving figure...")
-        #fig.savefig("figure-positions")
+        fig.savefig("figure-positions")
         fig.savefig('figure-positions.svg', format='svg')
 else:
     # Set up animation and updater function
