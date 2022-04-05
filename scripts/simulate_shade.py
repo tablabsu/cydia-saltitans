@@ -2,13 +2,14 @@ import random, argparse, logging
 from enum import Enum
 from matplotlib import pyplot as plt
 from matplotlib import rcParams as rcp
+import numpy as np
 
 # ----------------- CONSTANTS -----------------
 
 JUMP_SIZE = 1
 SHADE_POS = 0
 END_POS = 200
-START_MIN = 20
+START_MIN = 1
 START_MAX = 50
 
 # --------- UTILITY METHODS / CLASSES --------- 
@@ -77,14 +78,14 @@ logging.info("Displaying plots...")
 
 logging.info("Displaying diffuse probability distribution...")
 fig, ax = plt.subplots()
-#ax.set_xscale('log')
-#ax.set_yscale('log')
+ax.set_xscale('log')
+ax.set_yscale('log')
 ax.set_xlabel(f'Rate (N = {args.get("num_beans")})')
 ax.set_ylabel("Frequency")
 if args.get("title"):
     ax.set_title("Rate of finding shade (diffuse)")
-plt.hist(diffuse_times, bins=30, density=True, color=(0, 0, 0), histtype='step')
-plt.xlim([0, 0.05])
+plt.hist(diffuse_times, bins=np.logspace(np.log10(0.00001), np.log10(1.0)), density=True, color=(0, 0, 0), histtype='step')
+#plt.xlim([0, 0.05])
 plt.show()
 if input("Save figure? ").lower() in ('y', 'yes'):
     logging.info("Saving figure...")
@@ -92,14 +93,14 @@ if input("Save figure? ").lower() in ('y', 'yes'):
 
 logging.info("Displaying ballistic probability distribution...")
 fig, ax = plt.subplots()
-#ax.set_xscale('log')
-#ax.set_yscale('log')
+ax.set_xscale('log')
+ax.set_yscale('log')
 ax.set_xlabel(f'Rate (N = {args.get("num_beans")})')
 ax.set_ylabel("Frequency")
 if args.get("title"):
     ax.set_title("Rate of finding shade (ballistic)")
-plt.hist(ballistic_times, bins=30, density=True, color=(0, 0, 0), histtype='step')
-plt.xlim([0, 0.05])
+plt.hist(ballistic_times, bins=np.logspace(np.log10(0.00001), np.log10(1.0)), density=True, color=(0, 0, 0), histtype='step')
+#plt.xlim([0, 0.05])
 plt.show()
 if input("Save figure? ").lower() in ('y', 'yes'):
     logging.info("Saving figure...")
