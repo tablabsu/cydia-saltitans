@@ -1,15 +1,30 @@
 #! python
 import numpy as np
+import statistics as st
 from random import random
 from matplotlib import pyplot as plt
 from matplotlib import rcParams as rcp
 
-sizes = [11.139, 11.423, 10.125, 10.702, 10.552, 11.186, 10.040, 11.372, 9.017, 9.378, 9.804, 9.885, 11.185, 10.490, 10.952, 12.639, 11.409, 11.437, 12.266, 12.835, 10.950, 11.574, 10.848, 11.154, 9.546]
-print(len(sizes))
+BEAN_SIZE_PATH = '../misc/beansizes.txt'
+
+print(f'Reading bean sizes from {BEAN_SIZE_PATH}')
+sizes = []
+with open(BEAN_SIZE_PATH) as fp:
+    data = fp.readlines()
+    sizes = [float(d) for d in data]
 
 #color = ((random() * 0.5) + 0.5, (random() * 0.5) + 0.5, (random() * 0.5) + 0.5)
 color = (0.56078, 0.66274, 0.6)
 
+
+
+print(f'Processed {len(sizes)} bean size measurements.')
+print(f'Mean: {st.mean(sizes)}')
+print(f'Stdev: {st.stdev(sizes)}')
+print(f'Min: {min(sizes)}')
+print(f'Max: {max(sizes)}')
+
+fig, ax = plt.subplots()
 rcp.update({'font.size': 30})
 plt.hist(
     sizes, 
@@ -21,3 +36,4 @@ plt.xlabel("Diameter (mm)")
 plt.ylabel("P(diameter)")
 plt.tight_layout()
 plt.show()
+fig.savefig("figure-sizes")

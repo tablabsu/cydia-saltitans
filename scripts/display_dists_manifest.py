@@ -148,9 +148,9 @@ logging.info("Setting up plots...")
 
 # Setting up plot
 logging.info("Plotting {0} delays...".format(len(total_delays)))
-rcp.update({'font.size': 20})
+rcp.update({'font.size': 24})
 fig, ax = plt.subplots()
-ax.set_xlabel("t_D (seconds)")
+ax.set_xlabel(r'$t_D$ (seconds)')
 ax.set_ylabel("Frequency")
 ax.set_xlim(0, 25)
 d = [i for i in total_delays if i <= 25 and i >= mdf]
@@ -180,7 +180,7 @@ if input("Save figure? ").lower() in ('y', 'yes'):
 # Displacement plot
 
 logging.info("Plotting {0} displacements...".format(len(total_disps)))
-rcp.update({'font.size': 20})
+rcp.update({'font.size': 24})
 fig, ax = plt.subplots()
 ax.set_xlabel("δ ({0})".format(units))
 ax.set_ylabel("Frequency")

@@ -104,7 +104,7 @@ obj_disps = [[(d - math.pi) if (d + math.pi) >= (2*math.pi) else (d + math.pi) f
 color = (0, 0, 0)
 
 # Setting up angular disp. plot
-rcp.update({'font.size': 20})
+rcp.update({'font.size': 24})
 fig, ax = plt.subplots(subplot_kw={'projection': 'polar'})
 #ax.set_title("Angular Displacement Distribution")
 ax.set_theta_zero_location('N')
