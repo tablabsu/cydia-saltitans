@@ -16,20 +16,21 @@ with open(BEAN_SIZE_PATH) as fp:
 #color = ((random() * 0.5) + 0.5, (random() * 0.5) + 0.5, (random() * 0.5) + 0.5)
 color = (0.56078, 0.66274, 0.6)
 
-
-
 print(f'Processed {len(sizes)} bean size measurements.')
 print(f'Mean: {st.mean(sizes)}')
 print(f'Stdev: {st.stdev(sizes)}')
 print(f'Min: {min(sizes)}')
 print(f'Max: {max(sizes)}')
 
-fig, ax = plt.subplots()
 rcp.update({'font.size': 30})
+fig, ax = plt.subplots()
 plt.hist(
     sizes, 
     edgecolor="black", 
-    color=color, 
+    #color=color,
+    #histtype='step',
+    fill=False,
+    linewidth=2,
     density=True
 )
 plt.xlabel("Diameter (mm)")
