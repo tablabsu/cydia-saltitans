@@ -7,6 +7,7 @@ from matplotlib import rcParams as rcp
 from random import random
 from random import uniform
 import math
+import pickle
 
 # Setting up argument parser
 parser = argparse.ArgumentParser(description="Display position from json position data files")
@@ -49,19 +50,13 @@ for i in range(len(frames)):
     frames[i]["number"] = i + 1
 
 # Setting up plots
-rcp.update({'font.size': 20})
+#rcp.update({'font.size': 20})
 logging.info("Setting up plots...")
 fig, ax = plt.subplots()
 ax.set_xlim(0, canvas['width'])
 ax.set_ylim(canvas['height'], 0) 
 ax.set_xlabel("X position ({0})".format(canvas['units']))
 ax.set_ylabel("Y position ({0})".format(canvas['units']))
-#ax.set_xlabel("X position ({0})".format(canvas['units']), fontsize=18)
-#ax.set_ylabel("Y position ({0})".format(canvas['units']), fontsize=18)
-#ax.tick_params(axis='both', which='major', labelsize=18)
-#ax.tick_params(axis='both', which='minor', labelsize=14)
-#ax.set_title("Jumping Bean Coordinates ({0})".format(canvas['units']))
-#ax.xaxis.tick_top()
 
 if args.get("cumulative"):
     #color = (random(), random(), random())

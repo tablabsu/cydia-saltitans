@@ -2,6 +2,7 @@
 from matplotlib import pyplot as plt
 import numpy as np
 from matplotlib import rcParams as rcp
+from scipy import stats
 
 DATA_PATH = '../misc/msd-size-plot/msd-slopes-unlogged.txt'
 
@@ -22,18 +23,21 @@ print(f'Read {len(size)} bean sizes.')
 
 msd = [x / 4 for x in msd]
 
-theta = np.polyfit(size, msd, 1)
-fit_line = np.poly1d(theta)
+print(msd)
 
-rcp.update({
-    'font.size': 18,
-    'axes.labelsize': 14
-})
-fig, ax = plt.subplots()
-plt.xlabel('Bean size (mm)')
-plt.ylabel('Slope of mean-squared displacement')
-plt.scatter(size, msd, color='black')
-plt.plot(size, fit_line(size), linewidth=2, color=(1, 0, 0))
-plt.tight_layout()
-plt.show()
-fig.savefig("figure-msd-size")
+res = stats.linregress(size, msd)
+fit_line = np.poly1d([res.slope, res.intercept])
+
+print(f'Linear regression p value: {res.pvalue}')
+
+#rcp.update({ 'font.size': 18, 'axes.labelsize': 14 })
+with plt.style.context(['science']):
+    fig, ax = plt.subplots()
+    plt.xlabel('L (mm)')
+    plt.ylabel(r'D ($cm^{2}/s$)')
+    with plt.style.context(['scatter']):
+        plt.scatter(size, msd, color='black')
+    plt.plot(size, fit_line(size), linewidth=2, color=(1, 0, 0))
+    plt.tight_layout()
+    plt.show()
+    fig.savefig("fig2-diff-const", dpi=300)

@@ -4,6 +4,8 @@ import numpy as np
 from random import random
 from matplotlib import pyplot as plt
 from matplotlib import rcParams as rcp
+from scipy import stats
+
 
 # --------- UTILITY METHODS --------- 
 
@@ -93,74 +95,105 @@ for set in datasets:
 
     sets_msd.append(set_msd)
 
-rcp.update({'font.size': 20})
+#rcp.update({'font.size': 20})
 # Set up plot
 logging.info("Setting up plot...")
-fig, ax = plt.subplots()
-msd_slopes = []
-for i, set in enumerate(sets_msd):
-    tau = set['tau']
-    msd = set['msd']
+with plt.style.context('science'):
+    fig, ax = plt.subplots()
+    msd_slopes = []
+    msd_errs = []
+    colors = ['black', 'gray']
+    for i, set in enumerate(sets_msd):
+        tau = set['tau']
+        msd = set['msd']
 
-    # Convert to seconds
-    tau = [t * (1 / set['fps']) for t in tau]
+        # Convert to seconds
+        tau = [t * (1 / set['fps']) for t in tau]
 
-    # Log both dimensions
-    #tau = [math.log(i, 10) if i != 0 else i for i in tau]
-    #msd = [math.log(i, 10) if i != 0 else i for i in msd]
-    ax.set_xscale('log')
-    ax.set_yscale('log')
+        # Log both dimensions
+        #tau = [math.log(i, 10) if i != 0 else i for i in tau]
+        #msd = [math.log(i, 10) if i != 0 else i for i in msd]
+        ax.set_xscale('log')
+        ax.set_yscale('log')
 
-    # Apply tau limit
-    lim_tau = []
-    lim_msd = []
-    unlim_tau = []
-    unlim_msd = []
-    if set['tau_limit'] > 0:
-        tl = set['tau_limit']
-        for k in range(len(tau)):
-            if tau[k] <= tl:
-                lim_tau.append(tau[k])
-                lim_msd.append(msd[k])
-            else:
-                unlim_tau.append(tau[k])
-                unlim_msd.append(msd[k])
-    else:
-        lim_tau = tau
-        lim_msd = msd
-    
-    # Set random color
-    color = (random(), random(), random())
+        # Apply tau limit
+        lim_tau = []
+        lim_msd = []
+        unlim_tau = []
+        unlim_msd = []
+        if set['tau_limit'] > 0:
+            tl = set['tau_limit']
+            for k in range(len(tau)):
+                if tau[k] <= tl:
+                    lim_tau.append(tau[k])
+                    lim_msd.append(msd[k])
+                else:
+                    unlim_tau.append(tau[k])
+                    unlim_msd.append(msd[k])
+        else:
+            lim_tau = tau
+            lim_msd = msd
+        
+        # Set random color
+        #color = (random(), random(), random()) # if len(sets_msd) > 1 else (0, 0, 0)
+        color = colors[i]
 
-    # Plot scatter of lim and unlim tau
-    if not args['no_scatter']:
-        plt.scatter(lim_tau, lim_msd, marker=',', color=color, s=(288./fig.dpi)**2)
-        #if len(unlim_tau) > 0:
-            #plt.scatter(unlim_tau, unlim_msd, color=color, alpha=0.1)
+        # Plot scatter of lim and unlim tau
+        if not args['no_scatter']:
+            with plt.style.context('scatter'):
+                plt.scatter(lim_tau, lim_msd, marker=',', color=color, s=(288./fig.dpi)**2)
+                #if len(unlim_tau) > 0:
+                    #plt.scatter(unlim_tau, unlim_msd, color=color, alpha=0.1)
 
-    # Set MSD line type
-    line_type = '--'
-    if args['no_scatter']:
-        line_type = '-'
+        # Set MSD line type
+        line_type = '--'
+        if args['no_scatter']:
+            line_type = '-'
 
-    # Plot trendlines of log tau/msd
-    log_lim_tau = np.log10(lim_tau)
-    log_lim_msd = np.log10(lim_msd)
-    pf = np.polyfit(log_lim_tau, log_lim_msd, 1)
-    p = np.poly1d(pf)
-    msd_slopes.append(pf[0])
-    plt.plot(np.power(10, log_lim_tau), np.power(10, p(log_lim_tau)), line_type, label='{0} : Slope {1:.2f}'.format(set['set'], pf[0]), color=color)
+        # Plot trendlines of log tau/msd
+        log_lim_tau = np.log10(lim_tau)
+        log_lim_msd = np.log10(lim_msd)
+        res = stats.linregress(log_lim_tau, log_lim_msd)
+        fit_line = np.poly1d([res.slope, res.intercept])
+        print(f'{set["set"]} : {res.slope}')
+        msd_slopes.append(res.slope)
+        msd_errs.append(res.stderr)
+        plt.plot(np.power(10, log_lim_tau), np.power(10, fit_line(log_lim_tau)), line_type, label='{0} : Slope {1:.2f}'.format(set['set'], res.slope), color=color)
 
-plt.xlabel("τ (sec)")
-plt.ylabel("MSD (cm²)")
-if args['legend']:
-    plt.legend(prop={ 'size': 6 })
-plt.tight_layout()
-plt.show()
+    plt.xlabel(r'$\tau$ (s)')
+    plt.ylabel(r'MSD ($cm^2$)')
+    plt.tight_layout()
+    plt.show()
 
-logging.info("MSD Slope: {0} ± {1}".format(round(np.mean(msd_slopes), 3), round(np.std(msd_slopes), 3)))
+    logging.info("MSD Slope: {0} ± {1} (err {2})".format(np.mean(msd_slopes), np.std(msd_slopes), np.mean(msd_errs)))
 
-if input("Save figure? ").lower() in ('y', 'yes'):
-    logging.info("Saving figure...")
-    fig.savefig("figure-msd.png")
-    fig.savefig('figure-msd.svg', format='svg')
+    if input("Save figure? ").lower() in ('y', 'yes'):
+        logging.info("Saving figure...")
+        fig.savefig("figure-msd", dpi=300)
+
+# DIFFUSION CONSTANT (UNLOGGED MSD SLOPES)
+
+diff_slopes = []
+diff_errs = []
+with plt.style.context('science'):
+    for i, set in enumerate(sets_msd):
+        tau = set['tau']
+        msd = set['msd']
+        # Convert to seconds
+        tau = [t * (1 / set['fps']) for t in tau]
+        # Set random color
+        color = (random(), random(), random()) if len(sets_msd) > 1 else (0, 0, 0)
+        plt.scatter(tau, msd, marker=',', color=color, s=(288./fig.dpi)**2)
+        res = stats.linregress(tau, msd)
+        fit_line = np.poly1d([res.slope, res.intercept])
+        diff_slopes.append(res.slope)
+        diff_errs.append(res.stderr)
+        plt.plot(tau, fit_line(tau), '--', color=color)
+    plt.xlabel(r"$\tau$ (sec)")
+    plt.ylabel(r"MSD ($cm^2$)")
+    plt.tight_layout()
+    plt.show()
+
+diff_slopes = [x / 4 for x in diff_slopes]
+print(diff_slopes)
+logging.info("Diffusion Constant: {0} ± {1} (err {2}), (err / 4 {3})".format(np.mean(diff_slopes), np.std(diff_slopes), np.mean(diff_errs), np.mean([e / 4 for e in diff_errs])))

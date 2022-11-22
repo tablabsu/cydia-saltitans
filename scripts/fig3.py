@@ -296,45 +296,88 @@ if input("Save figure? ").lower() in ('y', 'yes'):
 '''
 
 with plt.style.context('science'):
-    fig, axs = plt.subplots(1, 3, figsize=(3.5 * 3, 2.625))
-    axs = axs.flatten()
+    fig = plt.figure(constrained_layout=True, figsize=(3.5 * 3, 2.625 * 2))
+    subfigs = fig.subfigures(2, 1)
+    topAxs = subfigs[0].subplots(2, 1)
+    btmAxs = subfigs[1].subplots(1, 3)
+    topAxs = topAxs.flatten()
+    btmAxs = btmAxs.flatten()
+    # ---- TOP AXES
+    data = np.genfromtxt("2021-08-13-video1-vidtimes.csv", delimiter = ',')
+    delta_plot = np.array([0])
+    video_time_plot = np.array([0])
+    for j in range(60):#len(data)):
+        delta_plot = np.append(delta_plot,0)
+        delta_plot = np.append(delta_plot,data[j,1])
+        delta_plot = np.append(delta_plot,0)
+        video_time_plot = np.append(video_time_plot,data[j,2])
+        video_time_plot = np.append(video_time_plot,data[j,2])
+        video_time_plot = np.append(video_time_plot,data[j,2])
+    delta_plot = delta_plot/np.max(delta_plot)
+    topAxs[0].plot(video_time_plot,delta_plot,'-k')
+    topAxs[0].set_xlim([-5,361])
+    topAxs[0].set_xlabel('time (s)')
+    topAxs[0].set_ylabel(r' $\delta$ / $\delta_m$')
+    topAxs[0].text(-0.05, 0.95, "a", transform=topAxs[0].transAxes)
+
+    delay_plot = np.array([0])
+    delay_plot = np.append(delay_plot,data[0,0])
+    video_time_plot2 = np.array([0])
+    video_time_plot2 = np.append(video_time_plot2,0)
+
+    for j in range(60):
+        delay_plot = np.append(delay_plot,data[j,0])
+        delay_plot = np.append(delay_plot,data[j,0])
+        delay_plot = np.append(delay_plot,data[j+1,0])
+        video_time_plot2 = np.append(video_time_plot2,data[j,2])
+        video_time_plot2 = np.append(video_time_plot2,data[j,2])  
+        video_time_plot2 = np.append(video_time_plot2,data[j,2])
+    delay_plot = delay_plot/np.max(delay_plot)
+    topAxs[1].plot(video_time_plot2,delay_plot,'-k')
+    topAxs[1].set_xlim([-5,361])
+    topAxs[1].set_xlabel('time (s)')
+    topAxs[1].set_ylabel(r'$t_D$ / $t_{D,m}$')
+    topAxs[1].text(-0.05, 0.95, "b", transform=topAxs[1].transAxes)
+
+
+    # ---- BOTTOM AXES
     # delay
-    axs[0].set_xlabel(r'$t_D$ (s)')
-    axs[0].set_ylabel(r'P($t_D$)')
-    axs[0].set_xlim(0, 25)
-    axs[0].text(-0.15, 0.95, "a", transform=axs[0].transAxes)
+    btmAxs[0].set_xlabel(r'$t_D$ (s)')
+    btmAxs[0].set_ylabel(r'P($t_D$)')
+    btmAxs[0].set_xlim(0, 25)
+    btmAxs[0].text(-0.15, 0.95, "c", transform=btmAxs[0].transAxes)
     d = [i for i in total_delays if i <= 25 and i >= mdf]
     print(f'Delays: {len(d)}')
-    hist, bins, _ = axs[0].hist(d, density=True, bins=max(d), color=(0, 0, 0), histtype='step')
+    hist, bins, _ = btmAxs[0].hist(d, density=True, bins=max(d), color=(0, 0, 0), histtype='step')
     # delay fit
     params = st.invgamma.fit(d + [0])
     logging.info("Delay fit parameters: {0}".format(params))
     fit_x = [i/10 for i in list(range(0, 250))]
     best_fit = st.invgamma.pdf(fit_x, *params)
-    #axs[0].plot(fit_x, best_fit, color=(1, 0, 0))
+    btmAxs[0].plot(fit_x, best_fit, color=(1, 0, 0))
     # disp
-    axs[1].set_xlabel(r'$\delta$ ' + "({0})".format(units))
-    axs[1].set_ylabel(r'P($\delta$)')
-    axs[1].set_xlim(0, 1.0)
-    axs[1].text(-0.15, 0.95, "b", transform=axs[1].transAxes)
+    btmAxs[1].set_xlabel(r'$\delta$ ' + "({0})".format(units))
+    btmAxs[1].set_ylabel(r'P($\delta$)')
+    btmAxs[1].set_xlim(0, 1.0)
+    btmAxs[1].text(-0.15, 0.95, "d", transform=btmAxs[1].transAxes)
     d = total_disps
     print(f'Displacements: {len(d)}')
-    hist, bins, _ = axs[1].hist(d, density=True, bins=40, color=(0, 0, 0), histtype='step')
+    hist, bins, _ = btmAxs[1].hist(d, density=True, bins=40, color=(0, 0, 0), histtype='step')
     # disp fit
     params = st.expon.fit(d)
     logging.info("Displacement fit parameters: {0}".format(params))
     fit_x = [i/100 for i in list(range(math.ceil(min(d) * 100), 100))]
     best_fit = st.expon.pdf(fit_x, *params)
-    #axs[1].plot(fit_x, best_fit, color=(1, 0, 0))
+    btmAxs[1].plot(fit_x, best_fit, color=(1, 0, 0))
     # ang 
-    axs[2].remove()
-    axs[2] = fig.add_subplot(1, 3, 3, projection='polar')
-    axs[2].set_theta_zero_location('N')
-    axs[2].set_xticklabels(["0° (Forwards)", "45°", "90°", "135°", "180° (Backwards)", "225°", "270°", "315°"])
-    axs[2].set_rticks([0.05, 0.15, 0.25])
-    axs[2].set_rlabel_position(0)
-    axs[2].text(-0.15, 0.95, "c", transform=axs[2].transAxes)
-    vals, bins, _ = axs[2].hist(total_ang_disps, density=True, histtype='step', bins=30, color=(0, 0, 0))
+    btmAxs[2].remove()
+    btmAxs[2] = subfigs[1].add_subplot(1, 3, 3, projection='polar')
+    btmAxs[2].set_theta_zero_location('N')
+    btmAxs[2].set_xticklabels(["0° (Forwards)", "45°", "90°", "135°", "180° (Backwards)", "225°", "270°", "315°"])
+    btmAxs[2].set_rticks([0.05, 0.15, 0.25])
+    btmAxs[2].set_rlabel_position(0)
+    btmAxs[2].text(-0.15, 0.95, "e", transform=btmAxs[2].transAxes)
+    vals, bins, _ = btmAxs[2].hist(total_ang_disps, density=True, histtype='step', bins=30, color=(0, 0, 0))
     print(f'Ang Disp:\n\tVals: {"[" + ",".join([str(v) for v in vals]) +"]"}\n\tBins: {"[" + ",".join([str(b) for b in bins]) + "]"}')
     print(f'Angular displacements: {len(total_ang_disps)}')
     # show/save
